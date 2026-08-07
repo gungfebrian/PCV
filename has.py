@@ -70,7 +70,7 @@ def klasifikasi_kartu(kartu_warped, all_templates):
     return kartu_terklasifikasi, confidence
 
 
-Folder = "/Users/gungfebrian/Documents/Tugas/PCV/Templatekartu"
+Folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Templatekartu")
 
 RANKS = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"]
 SUITS = ["Spade","Heart","Diamond","Club"]
@@ -100,8 +100,11 @@ for suit in SUITS: # Nested Loop
 print(f"total: {len(kartu_template)}")
 
 # Kamera time
-url = "http://10.4.136.188:4747/video"
-cap = cv2.VideoCapture(url)
+url = os.environ.get("CAM_URL", "http://10.4.136.188:4747/video")
+cap = cv2.VideoCapture(0)
+if not cap.isOpened():
+    print(f"kamera IP ga bisa ({url}), coba webcam laptop...")
+    cap = cv2.VideoCapture(0)
 if not cap.isOpened():
     print("kamera ga bisa")
 
