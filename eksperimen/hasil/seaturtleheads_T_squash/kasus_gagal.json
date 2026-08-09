@@ -1,0 +1,242 @@
+{
+  "kondisi": "raw",
+  "total_gagal": 551,
+  "total_query": 1246,
+  "contoh": [
+    {
+      "query_path": "dataset_penyu/SeaTurtleIDHeads/images/t067/zwNhktRCcJ.jpeg",
+      "query_id": "t067",
+      "query_side": "left",
+      "query_year": 2021,
+      "skor_top1": 0.8731608986854553,
+      "margin_top1_top2": 0.04812842607498169,
+      "peringkat_jawaban_benar": 156,
+      "top5": [
+        {
+          "path": "dataset_penyu/SeaTurtleIDHeads/images/t418/IQXraUQxjV.jpg",
+          "id": "t418",
+          "year": 2019,
+          "skor": 0.8731608986854553,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/SeaTurtleIDHeads/images/t186/tWibtAwWoq.JPG",
+          "id": "t186",
+          "year": 2015,
+          "skor": 0.8250324726104736,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/SeaTurtleIDHeads/images/t468/jvYYkgAGfK.JPG",
+          "id": "t468",
+          "year": 2020,
+          "skor": 0.8160065412521362,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/SeaTurtleIDHeads/images/t421/rnzunluwWq.jpg",
+          "id": "t421",
+          "year": 2019,
+          "skor": 0.8151533007621765,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/SeaTurtleIDHeads/images/t427/mMFAOERfPW.jpg",
+          "id": "t427",
+          "year": 2019,
+          "skor": 0.8084977865219116,
+          "benar": false
+        }
+      ],
+      "jenis": "yakin_tapi_salah"
+    },
+    {
+      "query_path": "dataset_penyu/SeaTurtleIDHeads/images/t200/DFruVYlBRX.JPG",
+      "query_id": "t200",
+      "query_side": "left",
+      "query_year": 2018,
+      "skor_top1": 0.8567355275154114,
+      "margin_top1_top2": 0.029189586639404297,
+      "peringkat_jawaban_benar": 455,
+      "top5": [
+        {
+          "path": "dataset_penyu/SeaTurtleIDHeads/images/t248/WeZaHrPjyB.JPG",
+          "id": "t248",
+          "year": 2016,
+          "skor": 0.8567355275154114,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/SeaTurtleIDHeads/images/t413/GaBfANHwvQ.jpg",
+          "id": "t413",
+          "year": 2019,
+          "skor": 0.8275459408760071,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/SeaTurtleIDHeads/images/t335/WNLdviCifA.JPG",
+          "id": "t335",
+          "year": 2017,
+          "skor": 0.8235417604446411,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/SeaTurtleIDHeads/images/t468/jvYYkgAGfK.JPG",
+          "id": "t468",
+          "year": 2020,
+          "skor": 0.8210254311561584,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/SeaTurtleIDHeads/images/t186/tWibtAwWoq.JPG",
+          "id": "t186",
+          "year": 2015,
+          "skor": 0.8187292814254761,
+          "benar": false
+        }
+      ],
+      "jenis": "yakin_tapi_salah"
+    },
+    {
+      "query_path": "dataset_penyu/SeaTurtleIDHeads/images/t079/czFuOGJbEF.JPG",
+      "query_id": "t079",
+      "query_side": "right",
+      "query_year": 2016,
+      "skor_top1": 0.6410290002822876,
+      "margin_top1_top2": 0.03407829999923706,
+      "peringkat_jawaban_benar": 813,
+      "top5": [
+        {
+          "path": "dataset_penyu/SeaTurtleIDHeads/images/t249/OJHVlNGSvT.JPG",
+          "id": "t249",
+          "year": 2016,
+          "skor": 0.6410290002822876,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/SeaTurtleIDHeads/images/t357/LSzMDJrbzo.JPG",
+          "id": "t357",
+          "year": 2018,
+          "skor": 0.6069507002830505,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/SeaTurtleIDHeads/images/t267/VGXlFRdAyP.JPG",
+          "id": "t267",
+          "year": 2016,
+          "skor": 0.5822576284408569,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/SeaTurtleIDHeads/images/t246/GEvRiiEdFx.JPG",
+          "id": "t246",
+          "year": 2016,
+          "skor": 0.5714724659919739,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/SeaTurtleIDHeads/images/t261/FAgIPfOjKc.JPG",
+          "id": "t261",
+          "year": 2016,
+          "skor": 0.5369085073471069,
+          "benar": false
+        }
+      ],
+      "jenis": "jawaban_jauh"
+    },
+    {
+      "query_path": "dataset_penyu/SeaTurtleIDHeads/images/t076/eYnLUnFZKe.JPG",
+      "query_id": "t076",
+      "query_side": "left",
+      "query_year": 2020,
+      "skor_top1": 0.582932710647583,
+      "margin_top1_top2": 0.10768204927444458,
+      "peringkat_jawaban_benar": 716,
+      "top5": [
+        {
+          "path": "dataset_penyu/SeaTurtleIDHeads/images/t262/NVLZvxtzTp.JPG",
+          "id": "t262",
+          "year": 2016,
+          "skor": 0.582932710647583,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/SeaTurtleIDHeads/images/t042/RQEldnLDvK.JPG",
+          "id": "t042",
+          "year": 2012,
+          "skor": 0.4752506613731384,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/SeaTurtleIDHeads/images/t004/NMHHaXjPLW.JPG",
+          "id": "t004",
+          "year": 2010,
+          "skor": 0.4549698829650879,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/SeaTurtleIDHeads/images/t004/VEmdnrnZaq.jpg",
+          "id": "t004",
+          "year": 2010,
+          "skor": 0.4470624029636383,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/SeaTurtleIDHeads/images/t027/qWfdnlOsnv.JPG",
+          "id": "t027",
+          "year": 2012,
+          "skor": 0.43636584281921387,
+          "benar": false
+        }
+      ],
+      "jenis": "jawaban_jauh"
+    },
+    {
+      "query_path": "dataset_penyu/SeaTurtleIDHeads/images/t008/MUeDEmDTkO.JPG",
+      "query_id": "t008",
+      "query_side": "right",
+      "query_year": 2020,
+      "skor_top1": 0.6149450540542603,
+      "margin_top1_top2": 0.03685605525970459,
+      "peringkat_jawaban_benar": 2,
+      "top5": [
+        {
+          "path": "dataset_penyu/SeaTurtleIDHeads/images/t158/IovoguJyGx.JPG",
+          "id": "t158",
+          "year": 2015,
+          "skor": 0.6149450540542603,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/SeaTurtleIDHeads/images/t008/PaXakrkxqN.JPG",
+          "id": "t008",
+          "year": 2017,
+          "skor": 0.5780889987945557,
+          "benar": true
+        },
+        {
+          "path": "dataset_penyu/SeaTurtleIDHeads/images/t158/OardgXHpyJ.JPG",
+          "id": "t158",
+          "year": 2015,
+          "skor": 0.5548481941223145,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/SeaTurtleIDHeads/images/t251/QlcCthQXaB.JPG",
+          "id": "t251",
+          "year": 2016,
+          "skor": 0.5500109195709229,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/SeaTurtleIDHeads/images/t158/hnEUaSREvf.JPG",
+          "id": "t158",
+          "year": 2015,
+          "skor": 0.5347772836685181,
+          "benar": false
+        }
+      ],
+      "jenis": "nyaris_peringkat_2"
+    }
+  ]
+}

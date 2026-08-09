@@ -1,0 +1,36 @@
+{
+  "cfg_bicubic_crop0.9": {
+    "rank1": 16.666666666666664,
+    "rank5": 32.142857142857146,
+    "mAP": 26.905822980262055,
+    "n": 168
+  },
+  "squash_INTER_AREA_224": {
+    "rank1": 18.452380952380953,
+    "rank5": 36.30952380952381,
+    "mAP": 28.570863851473447,
+    "n": 168
+  },
+  "delta_rank1_squash_minus_cfg": {
+    "delta": 1.7857142857142858,
+    "ci95": [
+      -2.380952380952381,
+      5.9523809523809526
+    ],
+    "signifikan": false
+  },
+  "mcnemar": {
+    "n01_baseline_salah_kondisi_benar": 8,
+    "n10_baseline_benar_kondisi_salah": 5,
+    "n_discordant": 13,
+    "p_value": 0.5810546875
+  },
+  "delta_mAP_squash_minus_cfg": {
+    "delta": 1.6650408712113856,
+    "ci95": [
+      -1.4429319752200942,
+      4.8352203431444565
+    ],
+    "signifikan": false
+  }
+}
