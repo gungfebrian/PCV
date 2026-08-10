@@ -35,7 +35,8 @@ def tulis_header(kat, gal, qry, cfg):
     meta = {
         "dataset": "SeaTurtleIDHeads",
         "dataset_hash": P.hash_dataset(kat),
-        "model": "BVRA/MegaDescriptor-T-224",
+        "model": {"T": "BVRA/MegaDescriptor-T-224",
+                  "L": "BVRA/MegaDescriptor-L-384"}[P.MODEL],
         "model_arch": cfg["architecture"],
         "model_snapshot": os.path.basename(P.SNAP_T or ""),
         "input_size": P.UKURAN, "crop_pct": P.CROP_PCT,

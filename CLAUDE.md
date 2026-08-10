@@ -6,13 +6,21 @@ Ini **eksperimen, bukan produk**. Satu pertanyaan yang dijawab:
 preprocessing mana yang benar-benar menaikkan akurasi re-identifikasi penyu,
 dan seberapa besar?
 
-Spesifikasi lengkap ada di `docs/eksperimen-preprocessing-reid-penyu.md`.
-Baca file itu sebelum menyentuh kode. Kalau ada konflik antara file ini dan
-spesifikasi itu, spesifikasi yang menang.
+Semua kode eksperimen ada di `eksperimen/`. Baca `eksperimen/README.md` dan
+`eksperimen/AUDIT.md` sebelum menyentuh kode. Protokol §3 dikunci di satu file:
+`eksperimen/protokol.py` — jangan ubah tanpa izin.
 
-- Dataset: ReunionTurtles (84 individu, 4 foto/individu, ~336 gambar)
-- Model: MegaDescriptor, **frozen**, tanpa fine-tuning
+Folder `tidak_penting/` berisi proyek lain (kartu remi, Face ID wajah) dan
+kode penyu pra-eksperimen. Tidak dipakai, dan sebagian punya bug yang sudah
+terdokumentasi. Jangan dijadikan acuan.
+
+- Dataset: ReunionTurtles (84 individu, 4 foto/individu, ~336 gambar).
+  SeaTurtleIDHeads dipakai sebagai pembanding skala (n = 1.246 query).
+- Model: MegaDescriptor-L-384, **frozen**, tanpa fine-tuning
 - Identifikasi: embedding + nearest neighbor, bukan training
+
+Status: keenam kondisi sudah dijalankan. **Tidak ada preprocessing yang
+menaikkan akurasi secara signifikan.** Hasil negatif, dan itu jawaban yang sah.
 
 ## Yang TIDAK dikerjakan di repo ini
 

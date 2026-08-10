@@ -348,6 +348,29 @@ def embed(paths, kondisi, model, batch=16, threads=4):
 
 
 # -------------------------------------------------------------- metrik
+def metrik_dari_matriks(S, id_q, id_g):
+    """Matriks similarity -> rank1 / rank5 / AP. SATU-SATUNYA tempat metrik
+    dihitung di repo ini.
+
+    Pasangan yang tidak sah ditandai -inf oleh pemanggil. Mask `sah` di bawah
+    WAJIB: tiap individu punya foto galeri di KEDUA sisi, jadi tanpa mask itu
+    foto sisi seberang ikut terhitung sebagai jawaban benar kedua di peringkat
+    jauh, dan mAP anjlok tanpa ada error apa pun. Justru karena jebakan ini
+    halus, fungsinya tidak boleh ditulis ulang di tempat lain — stage-2
+    re-ranking pun memanggil fungsi yang sama.
+    """
+    urut = np.argsort(-S, axis=1)
+    benar = id_g[urut] == id_q[:, None]
+    benar &= np.isfinite(np.take_along_axis(S, urut, 1))
+
+    ap = np.zeros(len(id_q))
+    for i in range(len(id_q)):
+        hit = np.flatnonzero(benar[i])
+        if len(hit):
+            ap[i] = np.mean((np.arange(len(hit)) + 1) / (hit + 1))
+    return {"rank1": benar[:, 0], "rank5": benar[:, :5].any(1), "ap": ap}
+
+
 def evaluasi_manual(Eq, Eg, id_q, id_g, sisi_q, sisi_g):
     """Implementasi manual §4. Sengaja pendek supaya bisa dibaca sekali lihat.
 
@@ -357,19 +380,7 @@ def evaluasi_manual(Eq, Eg, id_q, id_g, sisi_q, sisi_g):
     """
     S = Eq @ Eg.T                                   # cosine, sudah L2-normalized
     S[sisi_q[:, None] != sisi_g[None, :]] = -np.inf  # kunci sisi
-    urut = np.argsort(-S, axis=1)
-    benar = id_g[urut] == id_q[:, None]
-    sah = np.isfinite(np.take_along_axis(S, urut, 1))
-    benar &= sah
-
-    r1 = benar[:, 0]
-    r5 = benar[:, :5].any(1)
-    ap = np.zeros(len(id_q))
-    for i in range(len(id_q)):
-        hit = np.flatnonzero(benar[i])
-        if len(hit):
-            ap[i] = np.mean((np.arange(len(hit)) + 1) / (hit + 1))
-    return {"rank1": r1, "rank5": r5, "ap": ap}
+    return metrik_dari_matriks(S, id_q, id_g)
 
 
 def ringkas(hasil):

@@ -1,58 +1,156 @@
 # eksperimen/ — pengaruh preprocessing terhadap re-ID penyu
 
-Eksperimen, bukan produk. Kode lama di root repo tidak diubah.
+Eksperimen, bukan produk. Kode lama repo tidak diubah.
 
-**Baca `AUDIT.md` dulu.** Ada dua hal yang mengubah cara membaca semua angka di
-bawah: dataset yang dipakai bukan ReunionTurtles, dan transform input bawaan
-config model ternyata salah untuk data ini.
+**Baca `AUDIT.md` dulu** kalau mau tahu apa yang rusak di repo sebelum ini
+dikerjakan, dan kenapa beberapa angka tidak boleh dibandingkan langsung.
 
-## Hasil
+## Jawabannya
+
+**Tidak ada preprocessing yang menaikkan akurasi.** Kelimanya tidak bisa
+dibedakan dari raw — semua p-value di 0.26–0.59, semua CI melewati nol.
 
 | Kondisi | Rank-1 | Rank-5 | mAP | Δ Rank-1 vs raw (95% CI) | p (McNemar) |
 |---|---|---|---|---|---|
-| Raw (baseline) | **55.78** | **68.38** | **53.61** | — | — |
-| Crop kepala (center 70%) | 41.89 | 58.83 | 40.85 | −13.88 [−16.37, −11.48] | 1.17e-28 |
-| White balance (gray-world) | 54.82 | 67.58 | 52.45 | −0.96 [−2.65, +0.64] | 0.285 — tidak signifikan |
-| CLAHE (L, clip 2.0) | 50.72 | 65.17 | 49.69 | −5.06 [−6.98, −3.21] | 3.09e-07 |
-| Grayscale | 32.26 | 47.75 | 30.10 | −23.52 [−26.16, −20.87] | 2.92e-61 |
-| Crop + WB | 41.57 | 57.70 | 39.38 | −14.21 [−16.61, −11.88] | 4.57e-30 |
+| **Raw (baseline)** | **25.00** | 46.43 | **37.40** | — | — |
+| Crop kepala (center 70%) | 22.62 | 46.43 | 34.49 | −2.38 [−8.33, +3.57] | 0.557 |
+| White balance (gray-world) | 22.62 | 48.21 | 35.59 | −2.38 [−7.74, +2.98] | 0.503 |
+| CLAHE (L, clip 2.0) | 21.43 | 47.62 | 34.71 | −3.57 [−9.52, +2.38] | 0.327 |
+| Grayscale | 20.24 | 46.43 | 32.73 | −4.76 [−11.90, +2.38] | 0.256 |
+| Crop + WB | 22.62 | **51.19** | 35.18 | −2.38 [−8.93, +4.17] | 0.585 |
 
-SeaTurtleIDHeads · hash `39a1c6603055f5d8` · MegaDescriptor-T-224 frozen ·
-n = 1.246 query · gallery 2.134 foto / 380 individu.
+ReunionTurtles · hash `6a561d9dc6a5791e` · MegaDescriptor-L-384 frozen ·
+n = 168 query · gallery 168 foto / 84 individu (50 hijau + 34 sisik).
 
-**Tidak ada preprocessing yang menaikkan akurasi.** Yang menaikkan justru
-perbaikan transform input: +8.19 poin [+5.94, +10.43], p = 1.9e-12.
+Dengan n = 168, satu prediksi bernilai 0,60 poin. Selisih terbesar yang
+terukur (4,76 poin) setara 8 prediksi. Itu noise — persis yang diperingatkan
+di §5 spesifikasi.
+
+## Yang justru menaikkan akurasi
+
+| Perubahan | Rank-1 | Catatan |
+|---|---|---|
+| T-224 → **L-384** | 18.45 → **25.00** | Varian model lebih menentukan daripada preprocessing mana pun |
+| **Konsensus dua sisi** | 25.00 → **30.95** | Δ mAP +5.43 [+1.48, +9.63] **signifikan**; Rank-1 p=0.076. **Butuh 2 foto per penyu** |
+| Fusi T+L | 25.00 → 27.38 | p = 0.557, tidak signifikan |
+| Koreksi hubness | 25.00 → 23.21 | tidak menolong |
+
+## Breakdown
+
+Penyu **sisik konsisten lebih mudah dari penyu hijau di keenam kondisi**
+(raw: 29.41% vs 22.00%). Pola yang bertahan di semua kondisi jauh lebih
+meyakinkan daripada satu selisih tunggal. Kiri vs kanan tidak berbeda
+meyakinkan (26.19 vs 23.81).
 
 ## Berkas
 
 | Berkas | Guna |
 |---|---|
-| `protokol.py` | Protokol §3 dikunci di sini. Split, matching, metrik, 6 kondisi. |
+| `protokol.py` | Protokol §3 dikunci di sini. Split, matching, metrik, 6 kondisi, 2 dataset, 2 varian model. |
 | `jalankan.py` | Hitung embedding per kondisi. Resumable. |
-| `evaluasi.py` | Metrik + validasi manual vs wildlife-tools (`--validasi`). |
+| `evaluasi.py` | Metrik + breakdown + validasi manual vs wildlife-tools (`--validasi`). |
 | `statistik.py` | McNemar + bootstrap CI. Mencetak tabel utama. |
 | `transform_ab.py` | A/B transform input (`--uji` setelah embedding lengkap). |
-| `sanity.py` | Sanity check §8 (norma, kebocoran sisi, arah split). |
+| `lanjutan.py` | Konsensus dua sisi, koreksi hubness, fusi T+L. |
+| `sanity.py` | Sanity check §8. |
 | `kasus_gagal.py` | 5 kasus gagal + top-5 gallery. |
-| `app_demo.py` | Demo Streamlit. Tidak memuat model. |
+| `app_demo.py` | Demo Streamlit, 5 tab. Tidak memuat model. |
+| `rerank.py` | **Stage 2** — re-ranking local feature di atas top-k stage 1. |
+| `unduh_matcher.py` | Unduh bobot ALIKED/XFeat/RoMa. **Jalankan di Mac**, bukan sandbox. |
+| `uji.py` | 24 tes invarian protokol. Jalankan sebelum percaya angka. |
 | `AUDIT.md` | Audit repo + hasil sanity check §8. |
+
+## Stage 2 — XFeat: hasil positif pertama, dan besar
+
+| Konfigurasi | Rank-1 | Rank-5 | mAP | hijau | sisik | Δ Rank-1 | p |
+|---|---|---|---|---|---|---|---|
+| stage-1 saja | 25.00 | 46.43 | 37.40 | 22.00 | 29.41 | — | — |
+| **+ XFeat · murni** | **42.26** | 55.95 | **50.04** | 42.00 | 42.65 | **+17.26 [+8.93, +25.60]** | **0.0001** |
+| + XFeat · RRF | 33.33 | 54.17 | 43.96 | 30.00 | 38.24 | +8.33 [+2.98, +13.69] | 0.0066 |
+| + SIFT · murni | 20.83 | 39.88 | 30.60 | 31.00 | 5.88 | −4.17 | 0.382 |
+| + SIFT · RRF | 29.17 | 54.17 | 40.89 | 35.00 | 20.59 | +4.17 | 0.311 |
+
+Δ mAP XFeat murni = **+12.64 [+6.01, +19.34]**, signifikan. XFeat menolong
+**kedua** spesies; SIFT menghancurkan penyu sisik (29 → 6).
+
+XFeat × preprocessing — semuanya dalam 2,4 poin, jadi kesimpulan preprocessing
+tetap berlaku di stage-2:
+raw **42.26** · grayscale 42.26 · CLAHE 41.67 · crop 41.07 · WB 40.48 ·
+crop+WB 39.88. Grayscale identik dengan raw karena XFeat meng-grayscale
+inputnya sendiri di `forward()`.
+
+**Arsitektur XFeat direkonstruksi dari state_dict** (`xfeat_lokal.py`) karena
+repo aslinya diblokir. Dibuktikan benar oleh dua tes: `strict=True` load lolos
+(1,54 M param), dan self-match memberi 2048/2048 inlier sempurna. ALIKED dan
+RoMa masih terblokir — muncul sebagai "belum ada bobot", **bukan** angka
+perkiraan.
+
+```bash
+MODEL=L python3 grid_rerank.py          # panggil ulang sampai selesai
+MODEL=L python3 grid_rerank.py --lapor
+```
+
+## Stage 2 — local feature re-ranking
+
+Plafon re-ranking = recall@k stage 1. Galeri per sisi cuma 84 foto, jadi k=84
+= re-rank seluruh galeri, plafon 100%. Dengan SIFT + deskriptor di-cache:
+2–5 ms/pasangan, 14.112 pasangan selesai ~75 detik.
+
+| Varian | Rank-1 | Rank-5 | mAP | Δ Rank-1 | p |
+|---|---|---|---|---|---|
+| stage 1 saja | 25.00 | 46.43 | 37.40 | — | — |
+| re-rank murni | 20.83 | 39.88 | 30.60 | −4.17 | 0.382 |
+| **RRF** | **29.17** | **54.17** | **40.89** | +4.17 | 0.311 |
+
+**Efeknya berlawanan arah per spesies, dan angka gabungan menyembunyikan
+keduanya:** RRF menaikkan penyu hijau **+13.00 [+5.00, +22.00] p=0.0044**,
+sementara re-rank murni menjatuhkan penyu sisik **−23.53 [−35.29, −11.76]
+p=0.0004**. Keduanya lolos koreksi Bonferroni (ambang 0.005).
+
+Mekanismenya: pasangan benar hampir tidak pernah gagal cocok (0–2% di bawah
+4 inlier). Yang terjadi, pasangan **salah** mencocok lebih kuat — inlier
+salah-terbaik mengalahkan inlier benar di **80% query**. Tersangka: latar
+karang/pasir. Center crop 70% hanya menolong sedikit (benar-menang hijau
+31→34%), jadi hipotesis latar belum terbantah tapi juga belum teruji layak —
+butuh detektor kepala atau masking.
+
+```bash
+MODEL=L python3 rerank.py --matcher sift --k 84
+MODEL=L python3 rerank.py --matcher sift --kondisi crop --k 84
+../.venv/bin/python unduh_matcher.py      # di Mac, untuk ALIKED/XFeat/RoMa
+```
 
 ## Jalankan
 
 ```bash
-pip install torch timm opencv-python numpy scipy wildlife-tools streamlit
+../.venv/bin/pip install torch timm opencv-python numpy scipy wildlife-tools streamlit
 
-python3 jalankan.py --status        # cek split & progres
-python3 jalankan.py                 # semua kondisi (resumable, panggil ulang)
-python3 evaluasi.py --validasi      # manual vs wildlife-tools
-python3 statistik.py                # tabel utama + uji berpasangan
-python3 kasus_gagal.py
+python3 jalankan.py --status     # cek split & progres
+MODEL=L python3 jalankan.py      # semua kondisi (resumable, panggil ulang sampai selesai)
+MODEL=L python3 evaluasi.py --validasi
+MODEL=L python3 statistik.py
+MODEL=L python3 kasus_gagal.py
+MODEL=L python3 lanjutan.py
 streamlit run app_demo.py
 ```
 
-Bobot dibaca dari cache HuggingFace lokal (`~/.cache/huggingface`), tanpa
-jaringan. Untuk memakai transform sesuai config model sebagai pembanding:
-`TRANSFORM=cfg python3 jalankan.py`.
+Tiga variabel lingkungan mengatur run, dan hasilnya disimpan terpisah di
+`hasil/{DATASET}_{MODEL}_{TRANSFORM}/`:
 
-Hasil tersimpan di `hasil/squash/` (yang dipakai) dan `hasil/cfg/`
-(pembanding transform).
+- `DATASET=reunion` (default) atau `seaturtleheads`
+- `MODEL=T` (default, cepat) atau `L` (akurat, ~15× lebih lambat di CPU)
+- `TRANSFORM=squash` (default) atau `cfg` (sesuai `crop_pct` config model)
+
+Bobot dibaca dari cache HuggingFace lokal (`~/.cache/huggingface`), tanpa
+jaringan.
+
+## Batasan yang harus disebut saat mengutip angka ini
+
+1. **n = 168 terlalu kecil** untuk menguji preprocessing secara meyakinkan.
+   Efek harus >10 poin baru terdeteksi. Konfirmasi arah datang dari run
+   SeaTurtleIDHeads (n = 1.246), yaitu dataset lain.
+2. **"Crop kepala" belum benar-benar teruji** — yang diuji adalah center crop
+   70% yang buta. Kepala penyu tidak selalu di tengah frame. Menguji hipotesis
+   crop dengan benar butuh detektor kepala terlatih.
+3. **Rank-1 25% berarti 3 dari 4 foto salah di tebakan pertama.** Sistem ini
+   belum layak sebagai penentu identitas otomatis.

@@ -1,7 +1,7 @@
 {
   "dataset": "SeaTurtleIDHeads",
   "dataset_hash": "6a561d9dc6a5791e",
-  "model": "BVRA/MegaDescriptor-T-224",
+  "model": "BVRA/MegaDescriptor-L-384",
   "model_arch": "swin_large_patch4_window12_384",
   "model_snapshot": "33b3c6f4ee0c386a4126cc3dcd23843920613fa1",
   "input_size": 384,

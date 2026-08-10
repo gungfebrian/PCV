@@ -29,7 +29,7 @@ Git: 8 commit, HEAD `a4f723c "Turtle Detection"`, tidak ada branch eksperimen.
 
 | # | Temuan | Dampak |
 |---|---|---|
-| A | **Dataset ReunionTurtles tidak ada.** Yang ada: `SeaTurtleIDHeads` (400 individu, 7.582 foto) dan `ZindiTurtleRecall` (13.894 foto). Kaggle diblokir dari lingkungan eksekusi, jadi tidak bisa diunduh. | Protokol dijalankan di SeaTurtleIDHeads. **Tidak ada kolom spesies** → breakdown per spesies §4 tidak bisa dibuat. Foto sudah crop kepala → kondisi "crop kepala" berubah makna. |
+| A | ~~**Dataset ReunionTurtles tidak ada.**~~ **DIATASI 10/08** — diunduh manual lewat kaggle CLI di mesin lokal (sandbox tidak bisa menjangkau kaggle.com). Sekarang di `dataset_penyu/ReunionTurtles/`, hash `6a561d9dc6a5791e`. | Hasil utama sekarang dari ReunionTurtles: 336 foto, 84 individu, 50 hijau + 34 sisik, 168 kiri + 168 kanan. Breakdown per spesies §4 **bisa** dibuat. SeaTurtleIDHeads dipertahankan sebagai run pembanding skala (n = 1.246). |
 | B | **Tidak ada kode eksperimen sama sekali.** Tidak ada split gallery/query berbasis tahun untuk 6 kondisi, tidak ada mAP, tidak ada wildlife-tools, tidak ada uji statistik. | Semua dibuat baru di `eksperimen/`. |
 | C | `CLAUDE.md` menunjuk `docs/eksperimen-preprocessing-reid-penyu.md` — file itu tidak ada. `README.md` menyebut dataset **TurtleID2022**, `CLAUDE.md` menyebut **ReunionTurtles**, yang di disk **SeaTurtleIDHeads**. Tiga nama berbeda. | Sumber kebenaran tidak jelas. |
 | D | `wildlife-tools`, `wildlife-datasets`, `pandas`, `statsmodels`, `streamlit` tidak terpasang di `.venv`. | Validasi metrik §4 dan statistik §5 tidak mungkin dijalankan apa adanya. |
@@ -76,25 +76,24 @@ Dua masalah terpisah:
    `timm.models.swin_transformer.checkpoint_filter_fn` dan menolak jalan kalau
    ada key yang tidak cocok.
 
-2. **Transform yang "sesuai config" justru lebih buruk.** `config.json`
-   MegaDescriptor-T-224 menyebut `crop_pct 0.9`, `bicubic`, `center crop`.
-   Repo memakai `cv2.INTER_AREA` langsung ke 224×224 tanpa center crop. Diuji
-   di seluruh 1.246 query:
+2. **Transform yang "sesuai config": jawabannya berbeda per dataset.**
+   `config.json` menyebut `crop_pct 0.9`, `bicubic`, `center crop`. Repo
+   memakai `cv2.INTER_AREA` langsung ke ukuran input tanpa center crop.
 
-   | Transform | Rank-1 | Rank-5 | mAP |
-   |---|---|---|---|
-   | Sesuai config (bicubic + center crop 0.9) | 47.59 | 62.44 | 45.61 |
-   | Squash INTER_AREA 224×224 (cara repo) | **55.78** | **68.38** | **53.61** |
+   | Dataset | Sesuai config | Squash | Δ Rank-1 | p |
+   |---|---|---|---|---|
+   | SeaTurtleIDHeads (n=1.246) | 47.59 | **55.78** | **+8.19** [+5.94, +10.43] | 1.9e-12 |
+   | ReunionTurtles (n=168) | 16.67 | 18.45 | +1.79 [−2.38, +5.95] | 0.581 |
 
-   Δ Rank-1 = **+8.19** [+5.94, +10.43], McNemar p = 1.9e-12 (n01=158, n10=56).
+   Sebabnya masuk akal dan justru menguatkan penjelasannya: SeaTurtleIDHeads
+   sudah berupa crop kepala ketat, jadi center crop membuang sisik di tepi.
+   ReunionTurtles adalah foto utuh dengan latar karang — center crop tidak
+   membuang apa pun yang penting.
 
-   Penjelasannya konsisten: `crop_pct` dirancang untuk foto pemandangan penuh.
-   SeaTurtleIDHeads sudah berupa crop kepala ketat — center crop di atasnya
-   membuang sisik di tepi, justru informasi identitasnya.
-
-   **Inilah sebab baseline sempat di bawah 50%.** Sesuai §8, penyebabnya dicari
-   dulu sebelum menyentuh preprocessing. `TRANSFORM="squash"` dikunci untuk
-   semua kondisi.
+   **Pelajarannya bukan "crop_pct itu salah", melainkan "crop_pct bergantung
+   pada framing datamu" — dan itu harus diuji, bukan diasumsikan, tiap kali
+   datanya berganti.** `TRANSFORM="squash"` dikunci untuk semua kondisi demi
+   konsistensi protokol.
 
 ### ✅ Individu di query tanpa pasangan di gallery — **nol**
 
@@ -105,11 +104,27 @@ mereka distraktor. Ini sengaja dipertahankan (galeri = semua foto tahun pertama,
 termasuk individu yang hanya muncul satu tahun) karena itulah kondisi nyata di
 lapangan.
 
+### Catatan tambahan — baseline ReunionTurtles 25% dan itu bukan bug
+
+Rank-1 25% (L-384) jauh di bawah ambang 50% §8, jadi kelima dugaan diperiksa
+satu per satu dan semuanya bersih. Penjelasan yang tersisa: tugasnya memang
+berat.
+
+- Hanya **satu** foto gallery per individu per sisi — tidak ada multi-shot
+  untuk dirata-rata.
+- Jarak waktu gallery→query **median 4 tahun, maksimum 13 tahun**.
+- Foto pemandangan bawah air penuh; latar karang ikut masuk embedding.
+- Pemisahan embedding nyata tapi tipis: cosine pasangan BENAR 0.441 ± 0.162
+  vs pasangan SALAH 0.244 ± 0.158.
+
+Ambang 50% di §8 adalah heuristik yang mengandaikan setup lebih ramah. Untuk
+protokol seketat ini, 25% adalah baseline yang wajar. Tebak acak = 1,19%.
+
 ## 5. Yang terblokir di lingkungan ini
 
 | Terblokir | Sebab | Dampak |
 |---|---|---|
-| Unduh ReunionTurtles | Kaggle 403 dari sandbox, dan butuh kredensial | Ganti dataset, breakdown spesies hilang |
+| Unduh ReunionTurtles dari sandbox | Kaggle 403 dari proxy sandbox | Diatasi: diunduh manual di mesin lokal, lalu dibaca dari folder yang ter-mount |
 | `huggingface.co` dari kode | Proxy 403 | Diatasi: cache HF lokal user di-mount, dimuat offline |
 | `raw.githubusercontent.com`, `api.github.com`, `download.pytorch.org` | Proxy 403 | Tabel baseline resmi wildlife-tools per dataset tidak bisa diambil langsung |
 | Menjalankan `.venv` milik user | venv macOS/arm64 Python 3.14; eksekusi hanya tersedia di sandbox Linux | Dibangun lingkungan Linux terpisah (torch 2.5.1 CPU, timm 1.0.11) |
@@ -120,6 +135,11 @@ lapangan.
    Kode penyu lama tidak diubah.
 2. Protokol §3 dikunci di satu file (`protokol.py`) supaya tidak ada kondisi
    yang bisa diam-diam memakai setup berbeda.
-3. Dataset: SeaTurtleIDHeads, hash `39a1c6603055f5d8`. Substitusi ini ditulis
-   di header setiap laporan, bukan disembunyikan.
-4. `TRANSFORM="squash"` untuk semua kondisi, berdasarkan A/B di atas.
+3. Dataset utama: **ReunionTurtles**, hash `6a561d9dc6a5791e`. `protokol.py`
+   mendukung dua dataset lewat `DATASET`, dua varian model lewat `MODEL`, dan
+   dua transform lewat `TRANSFORM` — supaya perbandingan lintas-run memakai
+   kode yang sama persis.
+4. Model: **MegaDescriptor-L-384**. T-224 memberi 18.45%, L-384 memberi 25.00%
+   di ReunionTurtles. Memakai T akan membuang headroom yang dibutuhkan untuk
+   mendeteksi efek preprocessing.
+5. `TRANSFORM="squash"` untuk semua kondisi.
