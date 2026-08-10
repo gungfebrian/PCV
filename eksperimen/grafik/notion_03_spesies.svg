@@ -1,0 +1,38 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='720' height='280' style='background:white' viewBox='0 0 720 280'>
+<text x='12.0' y='20.0' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='13' fill='#24292f' text-anchor='start' font-weight='600'>Rank-1 per spesies</text>
+<text x='12.0' y='36.0' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='10' fill='#6e7781' text-anchor='start' font-weight='normal'>Penyu sisik konsisten lebih mudah dari penyu hijau — di keenam kondisi, tanpa kecuali</text>
+<rect x='560' y='14' width='9' height='9' fill='#1f6feb' rx='2'/>
+<text x='573.0' y='22.0' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9.5' fill='#24292f' text-anchor='start' font-weight='normal'>Green (n=100)</text>
+<rect x='638' y='14' width='9' height='9' fill='#e8a33d' rx='2'/>
+<text x='651.0' y='22.0' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9.5' fill='#24292f' text-anchor='start' font-weight='normal'>Hawksbill (n=68)</text>
+<text x='202.0' y='73.0' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='10.5' fill='#24292f' text-anchor='end' font-weight='normal'>Raw</text>
+<rect x='210' y='56.0' width='249.3' height='12.0' fill='#1f6feb' rx='2'/>
+<text x='464.3' y='65.6' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9' fill='#24292f' text-anchor='start' font-weight='normal'>22.0</text>
+<rect x='210' y='70.0' width='333.3' height='12.0' fill='#e8a33d' rx='2'/>
+<text x='548.3' y='79.6' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9' fill='#24292f' text-anchor='start' font-weight='normal'>29.4</text>
+<text x='202.0' y='103.0' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='10.5' fill='#24292f' text-anchor='end' font-weight='normal'>Crop kepala</text>
+<rect x='210' y='86.0' width='204.0' height='12.0' fill='#1f6feb' rx='2'/>
+<text x='419.0' y='95.6' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9' fill='#24292f' text-anchor='start' font-weight='normal'>18.0</text>
+<rect x='210' y='100.0' width='333.3' height='12.0' fill='#e8a33d' rx='2'/>
+<text x='548.3' y='109.6' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9' fill='#24292f' text-anchor='start' font-weight='normal'>29.4</text>
+<text x='202.0' y='133.0' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='10.5' fill='#24292f' text-anchor='end' font-weight='normal'>White balance</text>
+<rect x='210' y='116.0' width='238.0' height='12.0' fill='#1f6feb' rx='2'/>
+<text x='453.0' y='125.6' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9' fill='#24292f' text-anchor='start' font-weight='normal'>21.0</text>
+<rect x='210' y='130.0' width='283.3' height='12.0' fill='#e8a33d' rx='2'/>
+<text x='498.3' y='139.6' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9' fill='#24292f' text-anchor='start' font-weight='normal'>25.0</text>
+<text x='202.0' y='163.0' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='10.5' fill='#24292f' text-anchor='end' font-weight='normal'>CLAHE</text>
+<rect x='210' y='146.0' width='204.0' height='12.0' fill='#1f6feb' rx='2'/>
+<text x='419.0' y='155.6' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9' fill='#24292f' text-anchor='start' font-weight='normal'>18.0</text>
+<rect x='210' y='160.0' width='300.0' height='12.0' fill='#e8a33d' rx='2'/>
+<text x='515.0' y='169.6' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9' fill='#24292f' text-anchor='start' font-weight='normal'>26.5</text>
+<text x='202.0' y='193.0' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='10.5' fill='#24292f' text-anchor='end' font-weight='normal'>Grayscale</text>
+<rect x='210' y='176.0' width='192.7' height='12.0' fill='#1f6feb' rx='2'/>
+<text x='407.7' y='185.6' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9' fill='#24292f' text-anchor='start' font-weight='normal'>17.0</text>
+<rect x='210' y='190.0' width='283.3' height='12.0' fill='#e8a33d' rx='2'/>
+<text x='498.3' y='199.6' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9' fill='#24292f' text-anchor='start' font-weight='normal'>25.0</text>
+<text x='202.0' y='223.0' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='10.5' fill='#24292f' text-anchor='end' font-weight='normal'>Crop + white balance</text>
+<rect x='210' y='206.0' width='215.3' height='12.0' fill='#1f6feb' rx='2'/>
+<text x='430.3' y='215.6' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9' fill='#24292f' text-anchor='start' font-weight='normal'>19.0</text>
+<rect x='210' y='220.0' width='316.7' height='12.0' fill='#e8a33d' rx='2'/>
+<text x='531.7' y='229.6' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9' fill='#24292f' text-anchor='start' font-weight='normal'>27.9</text>
+</svg>

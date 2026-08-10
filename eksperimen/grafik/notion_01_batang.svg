@@ -1,0 +1,30 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='720' height='300' style='background:white' viewBox='0 0 720 300'>
+<text x='12.0' y='20.0' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='13' fill='#24292f' text-anchor='start' font-weight='600'>Rank-1 per kondisi preprocessing</text>
+<text x='12.0' y='36.0' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='10' fill='#6e7781' text-anchor='start' font-weight='normal'>ReunionTurtles · MegaDescriptor-L-384 · n=168 query</text>
+<text x='202.0' y='62.2' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='10.5' fill='#24292f' text-anchor='end' font-weight='normal'>Raw (baseline)</text>
+<rect x='210' y='44.0' width='304.0' height='25.3' fill='#1f6feb' rx='2'/>
+<text x='520.0' y='62.2' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='10.5' fill='#24292f' text-anchor='start' font-weight='normal'>25.00%</text>
+<text x='202.0' y='95.6' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='10.5' fill='#24292f' text-anchor='end' font-weight='normal'>Crop kepala (center 70%)</text>
+<rect x='210' y='77.33333333333334' width='275.0' height='25.3' fill='#6e7781' rx='2'/>
+<text x='491.0' y='95.6' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='10.5' fill='#24292f' text-anchor='start' font-weight='normal'>22.62%</text>
+<text x='537.0' y='95.6' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9.5' fill='#6e7781' text-anchor='start' font-weight='normal'>-2.38  p=0.557</text>
+<text x='202.0' y='128.9' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='10.5' fill='#24292f' text-anchor='end' font-weight='normal'>White balance (gray-world)</text>
+<rect x='210' y='110.66666666666667' width='275.0' height='25.3' fill='#6e7781' rx='2'/>
+<text x='491.0' y='128.9' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='10.5' fill='#24292f' text-anchor='start' font-weight='normal'>22.62%</text>
+<text x='537.0' y='128.9' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9.5' fill='#6e7781' text-anchor='start' font-weight='normal'>-2.38  p=0.503</text>
+<text x='202.0' y='162.2' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='10.5' fill='#24292f' text-anchor='end' font-weight='normal'>CLAHE (L, clip 2.0)</text>
+<rect x='210' y='144.0' width='260.6' height='25.3' fill='#6e7781' rx='2'/>
+<text x='476.6' y='162.2' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='10.5' fill='#24292f' text-anchor='start' font-weight='normal'>21.43%</text>
+<text x='522.6' y='162.2' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9.5' fill='#6e7781' text-anchor='start' font-weight='normal'>-3.57  p=0.327</text>
+<text x='202.0' y='195.6' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='10.5' fill='#24292f' text-anchor='end' font-weight='normal'>Grayscale</text>
+<rect x='210' y='177.33333333333334' width='246.1' height='25.3' fill='#6e7781' rx='2'/>
+<text x='462.1' y='195.6' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='10.5' fill='#24292f' text-anchor='start' font-weight='normal'>20.24%</text>
+<text x='508.1' y='195.6' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9.5' fill='#6e7781' text-anchor='start' font-weight='normal'>-4.76  p=0.256</text>
+<text x='202.0' y='228.9' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='10.5' fill='#24292f' text-anchor='end' font-weight='normal'>Crop + white balance</text>
+<rect x='210' y='210.66666666666669' width='275.0' height='25.3' fill='#6e7781' rx='2'/>
+<text x='491.0' y='228.9' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='10.5' fill='#24292f' text-anchor='start' font-weight='normal'>22.62%</text>
+<text x='537.0' y='228.9' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9.5' fill='#6e7781' text-anchor='start' font-weight='normal'>-2.38  p=0.585</text>
+<line x1='514.0' y1='38' x2='514.0' y2='244' stroke='#1f6feb' stroke-width='1.2' stroke-dasharray='4 3'/>
+<text x='518.0' y='34.0' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9' fill='#1f6feb' text-anchor='start' font-weight='normal'>baseline</text>
+<text x='12.0' y='290.0' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9.5' fill='#6e7781' text-anchor='start' font-weight='normal'>Abu-abu = tidak berbeda signifikan dari raw (p ≥ 0.05)</text>
+</svg>

@@ -1,0 +1,34 @@
+# --- Python ---
+.venv/
+__pycache__/
+*.pyc
+
+# --- OS / editor ---
+.DS_Store
+.vscode/
+.claude/
+
+# --- Dataset (besar, unduh ulang pakai unduh_dataset_penyu.py) ---
+dataset_penyu/
+seed_poc/
+individual_cards_2/
+Templatekartu_hd/
+models_wajah/
+
+# --- Bobot model & hasil latih (regenerasi pakai latih_arcface.py) ---
+*.pt
+*.pth
+*.h5
+*.onnx
+!Card_Recognizer-master/weights/*.h5
+
+# --- Database enrollment & kalibrasi ---
+penyu_terdaftar.npz
+muka_terdaftar.npz
+*.npz
+
+# --- Log & output sementara ---
+*.log
+tahap_*.png
+debug_*.png
+hasil_*.png

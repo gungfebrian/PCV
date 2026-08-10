@@ -1,0 +1,44 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='720' height='290' style='background:white' viewBox='0 0 720 290'>
+<text x='12.0' y='20.0' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='13' fill='#24292f' text-anchor='start' font-weight='600'>Di luar preprocessing</text>
+<text x='12.0' y='36.0' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='10' fill='#6e7781' text-anchor='start' font-weight='normal'>Konsensus dua sisi satu-satunya yang menonjol — ongkosnya: butuh DUA foto per penyu</text>
+<rect x='560' y='12' width='9' height='9' fill='#1f6feb' rx='2'/>
+<text x='573.0' y='20.0' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9.5' fill='#24292f' text-anchor='start' font-weight='normal'>Rank-1</text>
+<rect x='632' y='12' width='9' height='9' fill='#c9d1d9' rx='2'/>
+<text x='645.0' y='20.0' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9.5' fill='#24292f' text-anchor='start' font-weight='normal'>Rank-5</text>
+<text x='192.0' y='69.8' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='10.5' fill='#24292f' text-anchor='end' font-weight='normal'>raw (baseline)</text>
+<rect x='200' y='52.0' width='135.4' height='12.8' fill='#1f6feb' rx='2'/>
+<text x='340.4' y='62.3' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9' fill='#24292f' text-anchor='start' font-weight='normal'>25.0</text>
+<rect x='200' y='66.8' width='251.5' height='12.8' fill='#c9d1d9' rx='2'/>
+<text x='456.5' y='77.1' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9' fill='#24292f' text-anchor='start' font-weight='normal'>46.4</text>
+<text x='192.0' y='101.5' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='10.5' fill='#24292f' text-anchor='end' font-weight='normal'>konsensus dua sisi</text>
+<rect x='200' y='83.7' width='167.6' height='12.8' fill='#6e7781' rx='2'/>
+<text x='372.6' y='93.9' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9' fill='#24292f' text-anchor='start' font-weight='normal'>31.0</text>
+<rect x='200' y='98.5' width='296.6' height='12.8' fill='#c9d1d9' rx='2'/>
+<text x='501.6' y='108.8' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9' fill='#24292f' text-anchor='start' font-weight='normal'>54.8</text>
+<text x='570.0' y='101.5' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9.5' fill='#6e7781' text-anchor='start' font-weight='normal'>+5.95  p=0.076</text>
+<text x='192.0' y='133.2' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='10.5' fill='#24292f' text-anchor='end' font-weight='normal'>koreksi hubness</text>
+<rect x='200' y='115.3' width='125.7' height='12.8' fill='#6e7781' rx='2'/>
+<text x='330.7' y='125.6' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9' fill='#24292f' text-anchor='start' font-weight='normal'>23.2</text>
+<rect x='200' y='130.2' width='267.6' height='12.8' fill='#c9d1d9' rx='2'/>
+<text x='472.6' y='140.4' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9' fill='#24292f' text-anchor='start' font-weight='normal'>49.4</text>
+<text x='570.0' y='133.2' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9.5' fill='#6e7781' text-anchor='start' font-weight='normal'>-1.79  p=0.549</text>
+<text x='192.0' y='164.8' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='10.5' fill='#24292f' text-anchor='end' font-weight='normal'>fusi T-224 + L-384</text>
+<rect x='200' y='147.0' width='148.3' height='12.8' fill='#6e7781' rx='2'/>
+<text x='353.3' y='157.3' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9' fill='#24292f' text-anchor='start' font-weight='normal'>27.4</text>
+<rect x='200' y='161.8' width='245.0' height='12.8' fill='#c9d1d9' rx='2'/>
+<text x='450.0' y='172.1' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9' fill='#24292f' text-anchor='start' font-weight='normal'>45.2</text>
+<text x='570.0' y='164.8' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9.5' fill='#6e7781' text-anchor='start' font-weight='normal'>+2.38  p=0.557</text>
+<text x='192.0' y='196.5' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='10.5' fill='#24292f' text-anchor='end' font-weight='normal'>fusi + hubness</text>
+<rect x='200' y='178.7' width='145.1' height='12.8' fill='#6e7781' rx='2'/>
+<text x='350.1' y='188.9' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9' fill='#24292f' text-anchor='start' font-weight='normal'>26.8</text>
+<rect x='200' y='193.5' width='235.4' height='12.8' fill='#c9d1d9' rx='2'/>
+<text x='440.4' y='203.8' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9' fill='#24292f' text-anchor='start' font-weight='normal'>43.5</text>
+<text x='570.0' y='196.5' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9.5' fill='#6e7781' text-anchor='start' font-weight='normal'>+1.79  p=0.664</text>
+<text x='192.0' y='228.2' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='10.5' fill='#24292f' text-anchor='end' font-weight='normal'>fusi + konsensus</text>
+<rect x='200' y='210.3' width='141.9' height='12.8' fill='#6e7781' rx='2'/>
+<text x='346.9' y='220.6' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9' fill='#24292f' text-anchor='start' font-weight='normal'>26.2</text>
+<rect x='200' y='225.2' width='283.7' height='12.8' fill='#c9d1d9' rx='2'/>
+<text x='488.7' y='235.4' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9' fill='#24292f' text-anchor='start' font-weight='normal'>52.4</text>
+<text x='570.0' y='228.2' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9.5' fill='#6e7781' text-anchor='start' font-weight='normal'>+1.19  p=0.856</text>
+<line x1='335.4' y1='48' x2='335.4' y2='242' stroke='#1f6feb' stroke-width='1.2' stroke-dasharray='4 3'/>
+</svg>

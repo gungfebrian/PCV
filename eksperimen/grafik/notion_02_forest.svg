@@ -1,0 +1,31 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='720' height='290' viewBox='0 0 720 290'>
+<text x='12.0' y='20.0' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='13' fill='#24292f' text-anchor='start' font-weight='600'>Δ Rank-1 terhadap raw, dengan 95% CI bootstrap</text>
+<text x='12.0' y='36.0' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='10' fill='#6e7781' text-anchor='start' font-weight='normal'>Semua selang memotong nol — tidak ada kondisi yang berbeda dari raw</text>
+<line x1='438.5' y1='40' x2='438.5' y2='227' stroke='#1f6feb' stroke-width='1.5'/>
+<text x='438.5' y='34.0' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='10' fill='#1f6feb' text-anchor='middle' font-weight='normal'>0</text>
+<text x='202.0' y='73.5' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='10.5' fill='#24292f' text-anchor='end' font-weight='normal'>Crop kepala (center 70%)</text>
+<line x1='290.9' y1='69.5' x2='501.8' y2='69.5' stroke='#6e7781' stroke-width='3' stroke-linecap='round'/>
+<circle cx='396.4' cy='69.5' r='4.5' fill='#6e7781'/>
+<text x='536.0' y='73.5' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9.5' fill='#24292f' text-anchor='start' font-weight='normal'>-2.38 [-8.33, +3.57]  p=0.557</text>
+<text x='202.0' y='108.5' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='10.5' fill='#24292f' text-anchor='end' font-weight='normal'>White balance (gray-world)</text>
+<line x1='301.5' y1='104.5' x2='491.2' y2='104.5' stroke='#6e7781' stroke-width='3' stroke-linecap='round'/>
+<circle cx='396.4' cy='104.5' r='4.5' fill='#6e7781'/>
+<text x='536.0' y='108.5' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9.5' fill='#24292f' text-anchor='start' font-weight='normal'>-2.38 [-7.74, +2.98]  p=0.503</text>
+<text x='202.0' y='143.5' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='10.5' fill='#24292f' text-anchor='end' font-weight='normal'>CLAHE (L, clip 2.0)</text>
+<line x1='269.9' y1='139.5' x2='480.7' y2='139.5' stroke='#6e7781' stroke-width='3' stroke-linecap='round'/>
+<circle cx='375.3' cy='139.5' r='4.5' fill='#6e7781'/>
+<text x='536.0' y='143.5' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9.5' fill='#24292f' text-anchor='start' font-weight='normal'>-3.57 [-9.52, +2.38]  p=0.327</text>
+<text x='202.0' y='178.5' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='10.5' fill='#24292f' text-anchor='end' font-weight='normal'>Grayscale</text>
+<line x1='227.7' y1='174.5' x2='480.7' y2='174.5' stroke='#6e7781' stroke-width='3' stroke-linecap='round'/>
+<circle cx='354.2' cy='174.5' r='4.5' fill='#6e7781'/>
+<text x='536.0' y='178.5' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9.5' fill='#24292f' text-anchor='start' font-weight='normal'>-4.76 [-11.90, +2.38]  p=0.256</text>
+<text x='202.0' y='213.5' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='10.5' fill='#24292f' text-anchor='end' font-weight='normal'>Crop + white balance</text>
+<line x1='280.4' y1='209.5' x2='512.3' y2='209.5' stroke='#6e7781' stroke-width='3' stroke-linecap='round'/>
+<circle cx='396.4' cy='209.5' r='4.5' fill='#6e7781'/>
+<text x='536.0' y='213.5' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9.5' fill='#24292f' text-anchor='start' font-weight='normal'>-2.38 [-8.93, +4.17]  p=0.585</text>
+<text x='261.4' y='243.0' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9' fill='#6e7781' text-anchor='middle' font-weight='normal'>-10</text>
+<text x='350.0' y='243.0' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9' fill='#6e7781' text-anchor='middle' font-weight='normal'>-5</text>
+<text x='438.5' y='243.0' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9' fill='#6e7781' text-anchor='middle' font-weight='normal'>0</text>
+<text x='527.0' y='243.0' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9' fill='#6e7781' text-anchor='middle' font-weight='normal'>5</text>
+<text x='370.0' y='282.0' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='9.5' fill='#6e7781' text-anchor='middle' font-weight='normal'>poin persen</text>
+</svg>

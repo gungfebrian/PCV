@@ -1,0 +1,242 @@
+{
+  "kondisi": "raw",
+  "total_gagal": 126,
+  "total_query": 168,
+  "contoh": [
+    {
+      "query_path": "dataset_penyu/ReunionTurtles/Green/Eynard-Loisy/2023/Eynard-Loisy_2023_L.webp",
+      "query_id": "Green/Eynard-Loisy",
+      "query_side": "left",
+      "query_year": 2023,
+      "skor_top1": 0.6264569759368896,
+      "margin_top1_top2": 0.11446160078048706,
+      "peringkat_jawaban_benar": 16,
+      "top5": [
+        {
+          "path": "dataset_penyu/ReunionTurtles/Green/Zippy/2019/Zippy_2019_L.webp",
+          "id": "Green/Zippy",
+          "year": 2019,
+          "skor": 0.6264569759368896,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/ReunionTurtles/Green/Kiki-Gloria/2009/Kiki-Gloria_2009_L.webp",
+          "id": "Green/Kiki-Gloria",
+          "year": 2009,
+          "skor": 0.5119953751564026,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/ReunionTurtles/Green/Ninugo/2016/Ninugo_2016_L.webp",
+          "id": "Green/Ninugo",
+          "year": 2016,
+          "skor": 0.4548906981945038,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/ReunionTurtles/Green/Ylan/2014/Ylan_2014_L.webp",
+          "id": "Green/Ylan",
+          "year": 2014,
+          "skor": 0.43570029735565186,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/ReunionTurtles/Green/Idefix/2020/Idefix_2020_L.webp",
+          "id": "Green/Idefix",
+          "year": 2020,
+          "skor": 0.43214184045791626,
+          "benar": false
+        }
+      ],
+      "jenis": "yakin_tapi_salah"
+    },
+    {
+      "query_path": "dataset_penyu/ReunionTurtles/Green/Samy/2014/Samy_2014_L.webp",
+      "query_id": "Green/Samy",
+      "query_side": "left",
+      "query_year": 2014,
+      "skor_top1": 0.6235689520835876,
+      "margin_top1_top2": 0.022164583206176758,
+      "peringkat_jawaban_benar": 3,
+      "top5": [
+        {
+          "path": "dataset_penyu/ReunionTurtles/Green/Yanis/2015/Yanis_2015_L.webp",
+          "id": "Green/Yanis",
+          "year": 2015,
+          "skor": 0.6235689520835876,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/ReunionTurtles/Green/Leonard/2018/Leonard_2018_L.webp",
+          "id": "Green/Leonard",
+          "year": 2018,
+          "skor": 0.6014043688774109,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/ReunionTurtles/Green/Samy/2008/Samy_2008_L.webp",
+          "id": "Green/Samy",
+          "year": 2008,
+          "skor": 0.59517902135849,
+          "benar": true
+        },
+        {
+          "path": "dataset_penyu/ReunionTurtles/Green/Song/2012/Song_2012_L.webp",
+          "id": "Green/Song",
+          "year": 2012,
+          "skor": 0.5889425873756409,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/ReunionTurtles/Green/Noraf/2013/Noraf_2013_L.webp",
+          "id": "Green/Noraf",
+          "year": 2013,
+          "skor": 0.5292847156524658,
+          "benar": false
+        }
+      ],
+      "jenis": "yakin_tapi_salah"
+    },
+    {
+      "query_path": "dataset_penyu/ReunionTurtles/Hawksbill/Pacha/2020/Pacha_2020_L.webp",
+      "query_id": "Hawksbill/Pacha",
+      "query_side": "left",
+      "query_year": 2020,
+      "skor_top1": 0.43237292766571045,
+      "margin_top1_top2": 0.0749025046825409,
+      "peringkat_jawaban_benar": 81,
+      "top5": [
+        {
+          "path": "dataset_penyu/ReunionTurtles/Hawksbill/Victoria/2019/Victoria_2019_L.webp",
+          "id": "Hawksbill/Victoria",
+          "year": 2019,
+          "skor": 0.43237292766571045,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/ReunionTurtles/Hawksbill/Loulou/2016/Loulou_2016_L.webp",
+          "id": "Hawksbill/Loulou",
+          "year": 2016,
+          "skor": 0.35747042298316956,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/ReunionTurtles/Green/Nathanael/2019/Nathanael_2019_L.webp",
+          "id": "Green/Nathanael",
+          "year": 2019,
+          "skor": 0.28769204020500183,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/ReunionTurtles/Hawksbill/Mei Mei/2017/MeiMei_2017_L.webp",
+          "id": "Hawksbill/Mei Mei",
+          "year": 2017,
+          "skor": 0.24778343737125397,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/ReunionTurtles/Hawksbill/Enez/2016/Enez_2016_L.webp",
+          "id": "Hawksbill/Enez",
+          "year": 2016,
+          "skor": 0.2111525535583496,
+          "benar": false
+        }
+      ],
+      "jenis": "jawaban_jauh"
+    },
+    {
+      "query_path": "dataset_penyu/ReunionTurtles/Hawksbill/Maethys-Moana/2022/Maethys-Moana_2022_R.webp",
+      "query_id": "Hawksbill/Maethys-Moana",
+      "query_side": "right",
+      "query_year": 2022,
+      "skor_top1": 0.41477006673812866,
+      "margin_top1_top2": 0.03846713900566101,
+      "peringkat_jawaban_benar": 70,
+      "top5": [
+        {
+          "path": "dataset_penyu/ReunionTurtles/Hawksbill/Smile/2010/Smile_2010_R.webp",
+          "id": "Hawksbill/Smile",
+          "year": 2010,
+          "skor": 0.41477006673812866,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/ReunionTurtles/Hawksbill/Miti/2010/Miti_2010_R.webp",
+          "id": "Hawksbill/Miti",
+          "year": 2010,
+          "skor": 0.37630292773246765,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/ReunionTurtles/Hawksbill/Victoria/2019/Victoria_2019_R.webp",
+          "id": "Hawksbill/Victoria",
+          "year": 2019,
+          "skor": 0.2779792547225952,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/ReunionTurtles/Hawksbill/Coquelicot/2019/Coquelicot_2019_R.webp",
+          "id": "Hawksbill/Coquelicot",
+          "year": 2019,
+          "skor": 0.24206793308258057,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/ReunionTurtles/Hawksbill/Kaorie/2019/Kaorie_2019_R.webp",
+          "id": "Hawksbill/Kaorie",
+          "year": 2019,
+          "skor": 0.23673540353775024,
+          "benar": false
+        }
+      ],
+      "jenis": "jawaban_jauh"
+    },
+    {
+      "query_path": "dataset_penyu/ReunionTurtles/Green/Baguette/2019/Baguette_2019_L.webp",
+      "query_id": "Green/Baguette",
+      "query_side": "left",
+      "query_year": 2019,
+      "skor_top1": 0.40338534116744995,
+      "margin_top1_top2": 0.0034897327423095703,
+      "peringkat_jawaban_benar": 2,
+      "top5": [
+        {
+          "path": "dataset_penyu/ReunionTurtles/Green/Taleen/2020/Taleen_2020_L.webp",
+          "id": "Green/Taleen",
+          "year": 2020,
+          "skor": 0.40338534116744995,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/ReunionTurtles/Green/Baguette/2017/Baguette_2017_L.webp",
+          "id": "Green/Baguette",
+          "year": 2017,
+          "skor": 0.3998956084251404,
+          "benar": true
+        },
+        {
+          "path": "dataset_penyu/ReunionTurtles/Green/Adelotte/2019/Adelotte_2019_L.webp",
+          "id": "Green/Adelotte",
+          "year": 2019,
+          "skor": 0.36304938793182373,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/ReunionTurtles/Green/Chewie/2014/Chewie_2014_L.webp",
+          "id": "Green/Chewie",
+          "year": 2014,
+          "skor": 0.3453170955181122,
+          "benar": false
+        },
+        {
+          "path": "dataset_penyu/ReunionTurtles/Green/Naoki/2016/Naoki_2016_L.webp",
+          "id": "Green/Naoki",
+          "year": 2016,
+          "skor": 0.31191274523735046,
+          "benar": false
+        }
+      ],
+      "jenis": "nyaris_peringkat_2"
+    }
+  ]
+}

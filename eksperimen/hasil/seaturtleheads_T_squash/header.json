@@ -1,0 +1,28 @@
+{
+  "dataset": "SeaTurtleIDHeads",
+  "dataset_hash": "39a1c6603055f5d8",
+  "model": "BVRA/MegaDescriptor-T-224",
+  "model_arch": "swin_tiny_patch4_window7_224",
+  "model_snapshot": "3ea58ff6c6195bc748bb86c111ff40c32bdddcba",
+  "input_size": 224,
+  "crop_pct": 0.9,
+  "torch": "2.5.1",
+  "timm": "1.0.11",
+  "numpy": "2.2.6",
+  "sanity": {
+    "n_gallery": 2134,
+    "n_query": 1246,
+    "n_identitas_gallery": 380,
+    "n_identitas_query": 150,
+    "query_tanpa_pasangan_sisi_sama": 0,
+    "query_yang_tahunnya_tidak_lebih_baru": 0,
+    "gallery_per_sisi": {
+      "left": 1090,
+      "right": 1044
+    },
+    "query_per_sisi": {
+      "left": 703,
+      "right": 543
+    }
+  }
+}

@@ -1,0 +1,570 @@
+{
+  "k": 20,
+  "n": 168,
+  "model": "L",
+  "dataset": "reunion",
+  "dataset_hash": "6a561d9dc6a5791e",
+  "dibuat": "2026-08-10 14:36",
+  "baris": [
+    {
+      "matcher": "-",
+      "kondisi": "-",
+      "label": "stage-1 saja (MegaDescriptor)",
+      "rank1": 25.0,
+      "rank5": 46.42857142857143,
+      "mAP": 37.39872085468881,
+      "hijau": 22.0,
+      "sisik": 29.411764705882355
+    },
+    {
+      "matcher": "xfeat",
+      "kondisi": "raw",
+      "mode": "murni",
+      "label": "MegaDesc + XFEAT \u00b7 murni",
+      "rank1": 42.26190476190476,
+      "rank5": 55.952380952380956,
+      "mAP": 50.042903783452665,
+      "hijau": 42.0,
+      "sisik": 42.64705882352941,
+      "delta_rank1": {
+        "delta": 17.261904761904763,
+        "ci95": [
+          8.928571428571429,
+          25.595238095238095
+        ],
+        "signifikan": true
+      },
+      "delta_mAP": {
+        "delta": 12.644182928763868,
+        "ci95": [
+          6.009366825902651,
+          19.338507262761258
+        ],
+        "signifikan": true
+      },
+      "mcnemar_rank1": {
+        "n01_baseline_salah_kondisi_benar": 42,
+        "n10_baseline_benar_kondisi_salah": 13,
+        "n_discordant": 55,
+        "p_value": 0.00011361060320691506
+      },
+      "hijau_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 28,
+        "n10_baseline_benar_kondisi_salah": 8,
+        "n_discordant": 36,
+        "p_value": 0.0011932429624721408
+      },
+      "sisik_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 14,
+        "n10_baseline_benar_kondisi_salah": 5,
+        "n_discordant": 19,
+        "p_value": 0.063568115234375
+      }
+    },
+    {
+      "matcher": "xfeat",
+      "kondisi": "raw",
+      "mode": "rrf",
+      "label": "MegaDesc + XFEAT \u00b7 rrf",
+      "rank1": 33.33333333333333,
+      "rank5": 54.166666666666664,
+      "mAP": 43.963815449554524,
+      "hijau": 30.0,
+      "sisik": 38.23529411764706,
+      "delta_rank1": {
+        "delta": 8.333333333333334,
+        "ci95": [
+          2.9761904761904763,
+          13.69047619047619
+        ],
+        "signifikan": true
+      },
+      "delta_mAP": {
+        "delta": 6.565094594865714,
+        "ci95": [
+          2.4987137963265087,
+          10.513359713364549
+        ],
+        "signifikan": true
+      },
+      "mcnemar_rank1": {
+        "n01_baseline_salah_kondisi_benar": 19,
+        "n10_baseline_benar_kondisi_salah": 5,
+        "n_discordant": 24,
+        "p_value": 0.006610751152038574
+      },
+      "hijau_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 13,
+        "n10_baseline_benar_kondisi_salah": 5,
+        "n_discordant": 18,
+        "p_value": 0.09625244140625
+      },
+      "sisik_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 6,
+        "n10_baseline_benar_kondisi_salah": 0,
+        "n_discordant": 6,
+        "p_value": 0.03125
+      }
+    },
+    {
+      "matcher": "xfeat",
+      "kondisi": "crop",
+      "mode": "murni",
+      "label": "MegaDesc + XFEAT (Crop kepala (center 70%)) \u00b7 murni",
+      "rank1": 41.07142857142857,
+      "rank5": 56.547619047619044,
+      "mAP": 48.82351388102706,
+      "hijau": 43.0,
+      "sisik": 38.23529411764706,
+      "delta_rank1": {
+        "delta": 16.071428571428573,
+        "ci95": [
+          7.738095238095238,
+          24.404761904761905
+        ],
+        "signifikan": true
+      },
+      "delta_mAP": {
+        "delta": 11.42479302633825,
+        "ci95": [
+          4.746871838118453,
+          18.330622245396544
+        ],
+        "signifikan": true
+      },
+      "mcnemar_rank1": {
+        "n01_baseline_salah_kondisi_benar": 41,
+        "n10_baseline_benar_kondisi_salah": 14,
+        "n_discordant": 55,
+        "p_value": 0.00035528111863147854
+      },
+      "hijau_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 29,
+        "n10_baseline_benar_kondisi_salah": 8,
+        "n_discordant": 37,
+        "p_value": 0.0007528970600105822
+      },
+      "sisik_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 12,
+        "n10_baseline_benar_kondisi_salah": 6,
+        "n_discordant": 18,
+        "p_value": 0.237884521484375
+      }
+    },
+    {
+      "matcher": "xfeat",
+      "kondisi": "crop",
+      "mode": "rrf",
+      "label": "MegaDesc + XFEAT (Crop kepala (center 70%)) \u00b7 rrf",
+      "rank1": 30.357142857142854,
+      "rank5": 54.166666666666664,
+      "mAP": 42.235489516576344,
+      "hijau": 25.0,
+      "sisik": 38.23529411764706,
+      "delta_rank1": {
+        "delta": 5.357142857142857,
+        "ci95": [
+          -1.1904761904761905,
+          11.904761904761905
+        ],
+        "signifikan": false
+      },
+      "delta_mAP": {
+        "delta": 4.836768661887525,
+        "ci95": [
+          0.6229251520466693,
+          8.930902860085881
+        ],
+        "signifikan": true
+      },
+      "mcnemar_rank1": {
+        "n01_baseline_salah_kondisi_benar": 19,
+        "n10_baseline_benar_kondisi_salah": 10,
+        "n_discordant": 29,
+        "p_value": 0.13604594767093658
+      },
+      "hijau_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 11,
+        "n10_baseline_benar_kondisi_salah": 8,
+        "n_discordant": 19,
+        "p_value": 0.6476058959960938
+      },
+      "sisik_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 8,
+        "n10_baseline_benar_kondisi_salah": 2,
+        "n_discordant": 10,
+        "p_value": 0.109375
+      }
+    },
+    {
+      "matcher": "xfeat",
+      "kondisi": "wb",
+      "mode": "murni",
+      "label": "MegaDesc + XFEAT (White balance (gray-world)) \u00b7 murni",
+      "rank1": 40.476190476190474,
+      "rank5": 57.14285714285714,
+      "mAP": 48.448038480258646,
+      "hijau": 41.0,
+      "sisik": 39.705882352941174,
+      "delta_rank1": {
+        "delta": 15.476190476190476,
+        "ci95": [
+          7.142857142857143,
+          23.80952380952381
+        ],
+        "signifikan": true
+      },
+      "delta_mAP": {
+        "delta": 11.049317625569838,
+        "ci95": [
+          4.550144976073077,
+          17.646495120854844
+        ],
+        "signifikan": true
+      },
+      "mcnemar_rank1": {
+        "n01_baseline_salah_kondisi_benar": 39,
+        "n10_baseline_benar_kondisi_salah": 13,
+        "n_discordant": 52,
+        "p_value": 0.0004095414537825804
+      },
+      "hijau_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 27,
+        "n10_baseline_benar_kondisi_salah": 8,
+        "n_discordant": 35,
+        "p_value": 0.0018782254774123432
+      },
+      "sisik_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 12,
+        "n10_baseline_benar_kondisi_salah": 5,
+        "n_discordant": 17,
+        "p_value": 0.143463134765625
+      }
+    },
+    {
+      "matcher": "xfeat",
+      "kondisi": "wb",
+      "mode": "rrf",
+      "label": "MegaDesc + XFEAT (White balance (gray-world)) \u00b7 rrf",
+      "rank1": 31.547619047619047,
+      "rank5": 54.761904761904766,
+      "mAP": 43.012297556072355,
+      "hijau": 28.999999999999996,
+      "sisik": 35.294117647058826,
+      "delta_rank1": {
+        "delta": 6.5476190476190474,
+        "ci95": [
+          0.5952380952380952,
+          12.5
+        ],
+        "signifikan": true
+      },
+      "delta_mAP": {
+        "delta": 5.6135767013835345,
+        "ci95": [
+          1.4583110932054297,
+          9.73404188703351
+        ],
+        "signifikan": true
+      },
+      "mcnemar_rank1": {
+        "n01_baseline_salah_kondisi_benar": 18,
+        "n10_baseline_benar_kondisi_salah": 7,
+        "n_discordant": 25,
+        "p_value": 0.043285250663757324
+      },
+      "hijau_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 13,
+        "n10_baseline_benar_kondisi_salah": 6,
+        "n_discordant": 19,
+        "p_value": 0.1670684814453125
+      },
+      "sisik_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 5,
+        "n10_baseline_benar_kondisi_salah": 1,
+        "n_discordant": 6,
+        "p_value": 0.21875
+      }
+    },
+    {
+      "matcher": "xfeat",
+      "kondisi": "clahe",
+      "mode": "murni",
+      "label": "MegaDesc + XFEAT (CLAHE (L, clip 2.0)) \u00b7 murni",
+      "rank1": 41.66666666666667,
+      "rank5": 58.333333333333336,
+      "mAP": 49.455536976630974,
+      "hijau": 42.0,
+      "sisik": 41.17647058823529,
+      "delta_rank1": {
+        "delta": 16.666666666666668,
+        "ci95": [
+          8.333333333333334,
+          25.0
+        ],
+        "signifikan": true
+      },
+      "delta_mAP": {
+        "delta": 12.056816121942173,
+        "ci95": [
+          5.495475523320297,
+          18.655022478821405
+        ],
+        "signifikan": true
+      },
+      "mcnemar_rank1": {
+        "n01_baseline_salah_kondisi_benar": 41,
+        "n10_baseline_benar_kondisi_salah": 13,
+        "n_discordant": 54,
+        "p_value": 0.00017512673440589485
+      },
+      "hijau_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 28,
+        "n10_baseline_benar_kondisi_salah": 8,
+        "n_discordant": 36,
+        "p_value": 0.0011932429624721408
+      },
+      "sisik_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 13,
+        "n10_baseline_benar_kondisi_salah": 5,
+        "n_discordant": 18,
+        "p_value": 0.09625244140625
+      }
+    },
+    {
+      "matcher": "xfeat",
+      "kondisi": "clahe",
+      "mode": "rrf",
+      "label": "MegaDesc + XFEAT (CLAHE (L, clip 2.0)) \u00b7 rrf",
+      "rank1": 30.952380952380953,
+      "rank5": 53.57142857142857,
+      "mAP": 43.18521457641583,
+      "hijau": 28.000000000000004,
+      "sisik": 35.294117647058826,
+      "delta_rank1": {
+        "delta": 5.9523809523809526,
+        "ci95": [
+          0.0,
+          11.904761904761905
+        ],
+        "signifikan": false
+      },
+      "delta_mAP": {
+        "delta": 5.786493721727025,
+        "ci95": [
+          1.8174982801237085,
+          9.658305071890736
+        ],
+        "signifikan": true
+      },
+      "mcnemar_rank1": {
+        "n01_baseline_salah_kondisi_benar": 18,
+        "n10_baseline_benar_kondisi_salah": 8,
+        "n_discordant": 26,
+        "p_value": 0.07551869750022888
+      },
+      "hijau_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 12,
+        "n10_baseline_benar_kondisi_salah": 6,
+        "n_discordant": 18,
+        "p_value": 0.237884521484375
+      },
+      "sisik_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 6,
+        "n10_baseline_benar_kondisi_salah": 2,
+        "n_discordant": 8,
+        "p_value": 0.2890625
+      }
+    },
+    {
+      "matcher": "xfeat",
+      "kondisi": "gray",
+      "mode": "murni",
+      "label": "MegaDesc + XFEAT (Grayscale) \u00b7 murni",
+      "rank1": 42.26190476190476,
+      "rank5": 55.952380952380956,
+      "mAP": 50.042903783452665,
+      "hijau": 42.0,
+      "sisik": 42.64705882352941,
+      "delta_rank1": {
+        "delta": 17.261904761904763,
+        "ci95": [
+          8.928571428571429,
+          25.595238095238095
+        ],
+        "signifikan": true
+      },
+      "delta_mAP": {
+        "delta": 12.644182928763868,
+        "ci95": [
+          6.009366825902651,
+          19.338507262761258
+        ],
+        "signifikan": true
+      },
+      "mcnemar_rank1": {
+        "n01_baseline_salah_kondisi_benar": 42,
+        "n10_baseline_benar_kondisi_salah": 13,
+        "n_discordant": 55,
+        "p_value": 0.00011361060320691506
+      },
+      "hijau_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 28,
+        "n10_baseline_benar_kondisi_salah": 8,
+        "n_discordant": 36,
+        "p_value": 0.0011932429624721408
+      },
+      "sisik_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 14,
+        "n10_baseline_benar_kondisi_salah": 5,
+        "n_discordant": 19,
+        "p_value": 0.063568115234375
+      }
+    },
+    {
+      "matcher": "xfeat",
+      "kondisi": "gray",
+      "mode": "rrf",
+      "label": "MegaDesc + XFEAT (Grayscale) \u00b7 rrf",
+      "rank1": 33.33333333333333,
+      "rank5": 54.166666666666664,
+      "mAP": 43.963815449554524,
+      "hijau": 30.0,
+      "sisik": 38.23529411764706,
+      "delta_rank1": {
+        "delta": 8.333333333333334,
+        "ci95": [
+          2.9761904761904763,
+          13.69047619047619
+        ],
+        "signifikan": true
+      },
+      "delta_mAP": {
+        "delta": 6.565094594865714,
+        "ci95": [
+          2.4987137963265087,
+          10.513359713364549
+        ],
+        "signifikan": true
+      },
+      "mcnemar_rank1": {
+        "n01_baseline_salah_kondisi_benar": 19,
+        "n10_baseline_benar_kondisi_salah": 5,
+        "n_discordant": 24,
+        "p_value": 0.006610751152038574
+      },
+      "hijau_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 13,
+        "n10_baseline_benar_kondisi_salah": 5,
+        "n_discordant": 18,
+        "p_value": 0.09625244140625
+      },
+      "sisik_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 6,
+        "n10_baseline_benar_kondisi_salah": 0,
+        "n_discordant": 6,
+        "p_value": 0.03125
+      }
+    },
+    {
+      "matcher": "xfeat",
+      "kondisi": "crop_wb",
+      "mode": "murni",
+      "label": "MegaDesc + XFEAT (Crop + white balance) \u00b7 murni",
+      "rank1": 39.88095238095239,
+      "rank5": 55.35714285714286,
+      "mAP": 47.80270241316506,
+      "hijau": 38.0,
+      "sisik": 42.64705882352941,
+      "delta_rank1": {
+        "delta": 14.880952380952381,
+        "ci95": [
+          7.142857142857143,
+          22.61904761904762
+        ],
+        "signifikan": true
+      },
+      "delta_mAP": {
+        "delta": 10.403981558476252,
+        "ci95": [
+          3.9580800064909,
+          16.914286996121294
+        ],
+        "signifikan": true
+      },
+      "mcnemar_rank1": {
+        "n01_baseline_salah_kondisi_benar": 37,
+        "n10_baseline_benar_kondisi_salah": 12,
+        "n_discordant": 49,
+        "p_value": 0.0004697573180081349
+      },
+      "hijau_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 24,
+        "n10_baseline_benar_kondisi_salah": 8,
+        "n_discordant": 32,
+        "p_value": 0.0070003666914999485
+      },
+      "sisik_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 13,
+        "n10_baseline_benar_kondisi_salah": 4,
+        "n_discordant": 17,
+        "p_value": 0.049041748046875
+      }
+    },
+    {
+      "matcher": "xfeat",
+      "kondisi": "crop_wb",
+      "mode": "rrf",
+      "label": "MegaDesc + XFEAT (Crop + white balance) \u00b7 rrf",
+      "rank1": 29.761904761904763,
+      "rank5": 53.57142857142857,
+      "mAP": 41.6806171924371,
+      "hijau": 23.0,
+      "sisik": 39.705882352941174,
+      "delta_rank1": {
+        "delta": 4.761904761904762,
+        "ci95": [
+          -1.1904761904761905,
+          10.714285714285714
+        ],
+        "signifikan": false
+      },
+      "delta_mAP": {
+        "delta": 4.281896337748284,
+        "ci95": [
+          0.10191090593498311,
+          8.371242001943294
+        ],
+        "signifikan": true
+      },
+      "mcnemar_rank1": {
+        "n01_baseline_salah_kondisi_benar": 17,
+        "n10_baseline_benar_kondisi_salah": 9,
+        "n_discordant": 26,
+        "p_value": 0.16863754391670227
+      },
+      "hijau_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 8,
+        "n10_baseline_benar_kondisi_salah": 7,
+        "n_discordant": 15,
+        "p_value": 1.0
+      },
+      "sisik_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 9,
+        "n10_baseline_benar_kondisi_salah": 2,
+        "n_discordant": 11,
+        "p_value": 0.0654296875
+      }
+    }
+  ],
+  "belum_ada_bobot": [
+    {
+      "matcher": "aliked",
+      "alasan": "bobot ALIKED dari github release / HF \u2014 keduanya 403 di sini"
+    },
+    {
+      "matcher": "roma",
+      "alasan": "RoMa butuh backbone DINOv2; dl.fbaipublicfiles.com dan HF keduanya 403 di sini"
+    }
+  ]
+}

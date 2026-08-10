@@ -1,0 +1,16 @@
+{
+  "status": "OK",
+  "wildlife_tools": {
+    "rank1": 47.59229534510433,
+    "rank5": 62.43980738362761,
+    "sumber": "CosineSimilarity + KnnClassifier(k=1)"
+  },
+  "manual": {
+    "rank1": 47.59229534510433,
+    "rank5": 62.43980738362761
+  },
+  "selisih_rank1": 0.0,
+  "selisih_rank5": 0.0,
+  "cocok": true,
+  "catatan_mAP": "wildlife-tools 0.0.9 tidak menyediakan mAP siap pakai; mAP hanya dari implementasi manual."
+}
