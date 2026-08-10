@@ -39,6 +39,7 @@ lama tidak cocok dengan hasil sebenarnya. Akurasi dibaca dari
 """
 
 import argparse
+import glob
 import json
 import os
 import re
@@ -138,7 +139,12 @@ class Mesin:
         t0 = time.time()
         rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
         rgb_pra = P.KONDISI[kondisi](rgb)
-        x = P.transform_kanonik(rgb_pra)
+        # Stage-1 SELALU memakai embedding raw, persis seperti eksperimen
+        # (`rerank.kandidat_stage1` memanggil `muat("raw", ...)`). Preprocessing
+        # yang dipilih hanya memengaruhi stage-2. Sebelumnya app menerapkannya
+        # ke kedua stage, sehingga konfigurasi terbaik (raw di stage-1 +
+        # resize512 di stage-2) tidak bisa direproduksi sama sekali.
+        x = P.transform_kanonik(rgb)
         t["ms_pra"] = (time.time() - t0) * 1000
 
         t1 = time.time()
@@ -147,9 +153,15 @@ class Mesin:
         t["ms_infer"] = (time.time() - t1) * 1000
         v /= max(np.linalg.norm(v), 1e-9)
 
-        E = self.emb_galeri(kondisi)
+        E = self.emb_galeri("raw")
         idx = self.indeks_sisi(sisi)
-        if E is None or not idx:
+        if E is None:
+            t["galat"] = (f"embedding galeri 'raw' belum ada di "
+                          f"{os.path.basename(HASIL)} - jalankan: "
+                          f"MODEL={P.MODEL} python3 jalankan.py raw")
+            return None, [], t, rgb_pra, None, None
+        if not idx:
+            t["galat"] = f"tidak ada foto galeri sisi '{sisi}'"
             return None, [], t, rgb_pra, None, None
 
         s = E[idx] @ v
@@ -188,38 +200,36 @@ class Mesin:
         return hasil, top5, t, rgb_pra, pasangan, self.thumb(idx[int(urut[0])])
 
     def _fitur_frame(self, rgb, nama="xfeat"):
-        """Ekstrak dari frame kamera (bukan dari path) untuk matcher terpilih."""
-        g = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
+        """Ekstrak dari frame kamera (bukan dari path) untuk matcher terpilih.
+
+        Memakai kontrak `.ekstrak_array()` yang sama untuk semua matcher.
+        Versi sebelumnya menebak jenis matcher lewat `hasattr(mm, "X")` lalu
+        jatuh ke `mm.det.detectAndCompute` — dan RoMa tidak punya `.det`,
+        jadi memilih RoMa di UI langsung mematikan aplikasi.
+        """
+        return self.matcher[nama].ekstrak_array(rgb)
+
+    def _keypoint(self, fitur, nama):
+        """Koordinat keypoint untuk overlay, atau None kalau matcher-nya dense.
+
+        RoMa tidak punya keypoint per gambar — korespondensinya hanya ada
+        untuk PASANGAN. Mengarang titik untuk kasus itu lebih buruk daripada
+        menampilkan "-".
+        """
         mm = self.matcher[nama]
-        if hasattr(mm, "X"):                       # XFeat
-            return mm.X.ekstrak(mm.model, g, sisi=R.SISI_PROSES)
-        sc = R.SISI_PROSES / max(g.shape)
-        if sc < 1:
-            g = cv2.resize(g, None, fx=sc, fy=sc, interpolation=cv2.INTER_AREA)
-        kp, des = mm.det.detectAndCompute(g, None)
-        if des is None or len(kp) < 8:
+        if fitur is None or not getattr(mm, "PUNYA_KEYPOINT", False):
             return None
-        return np.float32([k.pt for k in kp]), des
+        return fitur[0]
 
     def _pasangan(self, a, b, nama="xfeat", maks=60):
         """Pasangan inlier untuk digambar. Sengaja mengembalikan koordinat,
         bukan cuma jumlah — supaya kelihatan DI MANA korespondensinya mendarat.
         Kalau garisnya di karang dan bukan di sisik, itu penjelasan langsung."""
-        if a is None or b is None:
+        src, dst = self.matcher[nama].korespondensi(a, b)
+        if src is None or len(src) < 4:
             return []
-        mm = self.matcher[nama]
-        if hasattr(mm, "X"):                       # XFeat: mutual NN, bukan ratio
-            s_, d_ = mm.X.cocokkan(a, b)
-            if s_ is None or len(s_) < 4:
-                return []
-            src, dst = s_.reshape(-1, 1, 2), d_.reshape(-1, 1, 2)
-        else:
-            m = cv2.BFMatcher(mm.norm).knnMatch(a[1], b[1], k=2)
-            baik = [x for x, y in m if x.distance < R.RATIO_LOWE * y.distance]
-            if len(baik) < 4:
-                return []
-            src = a[0][[x.queryIdx for x in baik]].reshape(-1, 1, 2)
-            dst = b[0][[x.trainIdx for x in baik]].reshape(-1, 1, 2)
+        src = np.float32(src).reshape(-1, 1, 2)
+        dst = np.float32(dst).reshape(-1, 1, 2)
         _, mask = cv2.findHomography(src, dst, cv2.USAC_MAGSAC, R.AMBANG_RANSAC)
         if mask is None:
             return []
@@ -232,6 +242,11 @@ def state_awal():
     return {
         "kondisi": "raw",
         "kondisi_pilihan": [(k, P.LABEL[k]) for k in P.KONDISI],
+        "sumber": "kamera",
+        "sumber_pilihan": [("kamera", "kamera / foto"),
+                           ("dataset", "jelajah dataset")],
+        "idx_query": 0,
+        "info_query": "",
         "matcher": "xfeat",
         "matcher_pilihan": [],          # diisi saat start dari bobot yang ada
         "rerank": "off",
@@ -304,6 +319,35 @@ def cek_hidup(u, timeout=3.0):
         return False, f"{host}:{port} tidak menjawab dalam {timeout:.0f} detik ({e})"
 
 
+def opsi_terbaik():
+    """Konfigurasi terbaik yang BENAR-BENAR terukur, dibaca dari berkas hasil.
+
+    Bukan angka yang diketik di kode. Kalau nanti ada konfigurasi yang lebih
+    baik, panel di UI ikut berubah sendiri tanpa menyentuh berkas ini.
+    """
+    kandidat = []
+    for p in sorted(glob.glob(os.path.join(HASIL, "rerank_*_k*.json"))):
+        try:
+            d = json.load(open(p))
+        except Exception:
+            continue
+        for mode, b in d.get("tabel", {}).items():
+            if mode == "stage1":
+                continue
+            nm = d.get("matcher", "")
+            kondisi = "raw"
+            for kk in P.KONDISI:
+                if kk != "raw" and nm.endswith("-" + kk):
+                    kondisi, nm = kk, nm[: -len(kk) - 1]
+                    break
+            kandidat.append({
+                "label": f"{nm} + {kondisi} - {mode} (k={d.get('k')})",
+                "matcher": nm, "kondisi": kondisi, "mode": mode,
+                "k": d.get("k"), "rank1": b["rank1"], "rank5": b["rank5"],
+                "mAP": b["mAP"]})
+    return max(kandidat, key=lambda x: x["rank1"]) if kandidat else None
+
+
 def buka_sumber(a):
     if a.foto:
         im = cv2.imread(a.foto)
@@ -341,6 +385,8 @@ def main():
     ap.add_argument("--url", default=None)
     ap.add_argument("--foto", default=None)
     ap.add_argument("--k", type=int, default=20)
+    ap.add_argument("--dataset", action="store_true",
+                    help="mulai di mode jelajah dataset, tanpa kamera")
     ap.add_argument("--lebar", type=int, default=1500)
     ap.add_argument("--tinggi", type=int, default=880)
     a = ap.parse_args()
@@ -351,20 +397,34 @@ def main():
           "belum ada statistik.json — tidak ditampilkan daripada usang")
 
     mesin = Mesin()
+    _kat = P.baca_katalog()
+    _gal, mesin_qry = P.bangun_split(_kat)
     st = state_awal()
     st["matcher_pilihan"] = [(m, m.upper()) for m in mesin.tersedia]
     if st["matcher"] not in mesin.tersedia and mesin.tersedia:
         st["matcher"] = mesin.tersedia[0]
     print("matcher tersedia:", ", ".join(mesin.tersedia) or "(tidak ada)")
-    cap, diam = buka_sumber(a)
+    if a.dataset:
+        st["sumber"] = "dataset"
+        cap, diam = None, None
+    else:
+        cap, diam = buka_sumber(a)
     ringkas = akurasi_terukur()
+    terbaik = opsi_terbaik()
+    if terbaik:
+        print(f"opsi terbaik terukur: {terbaik['label']} -> "
+              f"Rank-1 {terbaik['rank1']:.2f}%")
 
     JUDUL = "Re-ID Penyu — engineer tool"
     cv2.namedWindow(JUDUL, cv2.WINDOW_AUTOSIZE)
     klik = {"aksi": None}
     tahap_kini = []
 
-    def on_mouse(ev, x, y, *_):
+    def on_mouse(ev, x, y, flags=0, *_):
+        if ev == cv2.EVENT_MOUSEWHEEL and x < T.LEBAR_SIDEBAR:
+            st["geser"] = max(0, st.get("geser", 0)
+                              - (1 if flags > 0 else -1) * 60)
+            return
         if ev != cv2.EVENT_LBUTTONDOWN:
             return
         klik["aksi"] = (T.klik_sidebar(st, x, y)
@@ -380,12 +440,45 @@ def main():
            "n_gallery": 0, "n_kp": "-", "inlier": "-"}
     t_akhir, fps, perlu = time.time(), 0.0, True
 
+    idx_termuat = None          # indeks dataset yang gambarnya sedang di `frame`
+
     while True:
-        if cap is not None and not st["jeda"]:
+        # Kamera dilepas begitu masuk mode dataset, dan dibuka lagi saat
+        # kembali. Sebelumnya `cap` dibiarkan terbuka tapi tidak pernah
+        # dibaca: buffer driver terus terisi, sehingga mode dataset ikut
+        # tersendat dan frame pertama setelah kembali ke kamera sudah basi.
+        # Untuk kamera IP efeknya paling terasa karena buffer-nya di jaringan.
+        if st["sumber"] == "dataset" and cap is not None:
+            cap.release()
+            cap = None
+            print("kamera dilepas (mode dataset)")
+        elif st["sumber"] == "kamera" and cap is None and diam is None:
+            try:
+                cap, _ = buka_sumber(a)
+                print("kamera dibuka kembali")
+            except SystemExit as e:
+                st["sumber"] = "dataset"
+                print(f"kamera gagal dibuka, tetap di mode dataset: {e}")
+
+        if st["sumber"] == "dataset":
+            r_ = mesin_qry[st["idx_query"]]
+            # Baca ulang HANYA saat indeksnya berubah. Versi lama memanggil
+            # cv2.imread tiap iterasi lalu membandingkan seluruh piksel dengan
+            # np.array_equal — dua operasi mahal yang hasilnya selalu sama.
+            if idx_termuat != st["idx_query"]:
+                f_ = cv2.imread(r_["path"])
+                if f_ is not None:
+                    frame, perlu = f_, True
+                    idx_termuat = st["idx_query"]
+            st["sisi"] = r_["side"]
+            st["info_query"] = (f"{st['idx_query']+1}/{len(mesin_qry)}  "
+                                f"{r_['identity'].split('/')[-1]} {r_['year']}")
+        elif cap is not None and not st["jeda"]:
             ok, f = cap.read()
             if not ok:
                 break
             frame, perlu = f, True
+            idx_termuat = None
 
         if frame is not None and perlu:
             hasil, top5, t, rgb_pra, pasangan, kand = mesin.kenali(
@@ -399,12 +492,35 @@ def main():
                          * P.STD + P.MEAN, 0, 1) * 255).astype(np.uint8),
                 cv2.COLOR_RGB2BGR)
             fq = mesin._fitur_frame(rgb_pra, st["matcher"])
-            kp = fq[0] if fq else None
+            kp = mesin._keypoint(fq, st["matcher"])
+            if kp is not None and not getattr(
+                    mesin.matcher[st["matcher"]], "KOORD_ASLI", True):
+                # SIFT/AKAZE/ORB mengembalikan koordinat pada gambar yang SUDAH
+                # diperkecil ke SISI_PROSES, sedangkan XFeat sudah membaginya
+                # kembali. Tanpa koreksi ini titik SIFT menumpuk di pojok
+                # kiri-atas untuk foto besar — persis kelas bug yang sama
+                # dengan double-scaling yang dulu terlihat di layar.
+                kp = kp * max(1.0, max(rgb_pra.shape[:2]) / R.SISI_PROSES)
             tel["n_kp"] = len(kp) if kp is not None else "-"
+            # Keypoint diekstrak dari rgb_pra (gambar SETELAH preprocessing).
+            # Untuk digambar di atas frame ASLI, koordinatnya harus dipetakan
+            # dulu: kondisi seperti resize368 mengubah lebar dan tinggi dengan
+            # faktor BERBEDA, jadi skalanya per sumbu, bukan satu angka.
+            kp_asli = None
+            if kp is not None and frame is not None:
+                fh, fw = frame.shape[:2]
+                ph, pw = pra_bgr.shape[:2]
+                kp_asli = kp * np.array([fw / pw, fh / ph], np.float32)
             kp_vis = pra_bgr.copy()
             if kp is not None:
-                sc = R.SISI_PROSES / max(pra_bgr.shape[:2])
-                T.gambar_keypoint(kp_vis, kp, 1 / max(sc, 1e-9), 0, 0)
+                # Skala 1.0, BUKAN 1/sc. Ekstraktor sudah mengembalikan
+                # koordinat dalam ukuran gambar ASLI (lihat `pts / s` di
+                # xfeat_lokal.ekstrak). Membaginya lagi di sini membuat titik
+                # diskalakan dua kali: untuk foto yang lebih kecil dari
+                # SISI_PROSES faktornya >1, sehingga semua titik mengkerut ke
+                # pojok kiri-atas. Bug ini tidak memunculkan error apa pun —
+                # hanya overlay yang salah, dan baru ketahuan dari layar.
+                T.gambar_keypoint(kp_vis, kp, 1.0, 0, 0)
             tahap_kini = [("Asli", frame), ("Praproses", pra_bgr),
                           ("Tepi", tepi), ("Align", align),
                           ("Keypoint", kp_vis)]
@@ -416,12 +532,17 @@ def main():
         fps = 0.9 * fps + 0.1 / max(sekarang - t_akhir, 1e-6)
         t_akhir = sekarang
         tel["fps"] = fps
+        if terbaik:
+            terbaik["aktif"] = (st["matcher"] == terbaik.get("matcher")
+                                and st["kondisi"] == terbaik.get("kondisi")
+                                and st["rerank"] == terbaik.get("mode"))
+            tel["terbaik"] = terbaik
 
         peta = dict(tahap_kini)
         utama = peta.get(st["tahap"], frame)
         kanvas = T.susun(utama, st, tel, hasil, top5, a.lebar, a.tinggi,
                          tahap=tahap_kini, bbox=bbox if frame is not None else None,
-                         keypoint=kp if st["tahap"] == "Asli" else None,
+                         keypoint=(kp_asli if st["tahap"] == "Asli" else None),
                          pasangan=pasangan, gambar_kandidat=kand,
                          ringkas=ringkas)
         cv2.imshow(JUDUL, kanvas)
@@ -429,7 +550,13 @@ def main():
         if klik["aksi"]:
             jenis, nilai = klik["aksi"]
             klik["aksi"] = None
-            if jenis in ("kondisi", "sisi", "rerank", "tahap", "matcher"):
+            if jenis == "nav":
+                st["idx_query"] = (st["idx_query"] + 1) % len(mesin_qry)
+                perlu = True
+            elif jenis == "sumber":
+                st["sumber"] = nilai
+                perlu = True
+            elif jenis in ("kondisi", "sisi", "rerank", "tahap", "matcher"):
                 st[jenis] = nilai
                 perlu = True
             elif jenis == "toggle":
@@ -463,10 +590,25 @@ def main():
         if k == ord("f"):
             st["sisi"] = "right" if st["sisi"] == "left" else "left"
             perlu = True
+        if k == ord("d"):
+            st["sumber"] = "dataset" if st["sumber"] == "kamera" else "kamera"
+            perlu = True
+        if k in (ord("."), ord(">"), 3):          # berikutnya
+            st["idx_query"] = (st["idx_query"] + 1) % len(mesin_qry)
+            perlu = True
+        if k in (ord(","), ord("<"), 2):          # sebelumnya
+            st["idx_query"] = (st["idx_query"] - 1) % len(mesin_qry)
+            perlu = True
         if k == ord("r"):
             u = ["off", "murni", "rrf"]
             st["rerank"] = u[(u.index(st["rerank"]) + 1) % 3]
             perlu = True
+        if k in (ord("["), 0):
+            pass
+        if k == 86 or k == ord("n"):        # PgDn / n : sidebar turun
+            st["geser"] = st.get("geser", 0) + 80
+        if k == 85 or k == ord("p"):        # PgUp / p : sidebar naik
+            st["geser"] = max(0, st.get("geser", 0) - 80)
         if k == ord("b"):
             st["bbox"] = not st["bbox"]
         if k == ord("k"):

@@ -30,9 +30,24 @@ def uji(nama):
 def state_uji():
     return {
         "kondisi": "wb",
+        # Sengaja mencerminkan daftar kondisi yang SEBENARNYA dipakai (11),
+        # bukan versi pendek. Tes tata letak yang memakai daftar lebih pendek
+        # dari kenyataan tidak akan pernah menangkap masalah overflow.
         "kondisi_pilihan": [("raw", "Raw (baseline)"), ("crop", "Crop kepala"),
                             ("wb", "White balance"), ("clahe", "CLAHE"),
-                            ("gray", "Grayscale"), ("crop_wb", "Crop + WB")],
+                            ("gray", "Grayscale"), ("crop_wb", "Crop + WB"),
+                            ("resize368", "Resize seragam 368x368"),
+                            ("resize256", "Resize seragam 256x256"),
+                            ("resize320", "Resize seragam 320x320"),
+                            ("resize448", "Resize seragam 448x448"),
+                            ("resize512", "Resize seragam 512x512")],
+        "matcher": "xfeat",
+        "matcher_pilihan": [("sift", "SIFT"), ("xfeat", "XFEAT")],
+        "sumber": "dataset",
+        "sumber_pilihan": [("kamera", "kamera / foto"),
+                           ("dataset", "jelajah dataset")],
+        "info_query": "8/168  Calvin 2021",
+        "geser": 0,
         "rerank": "rrf",
         "rerank_pilihan": [("off", "mati (stage-1 saja)"),
                            ("murni", "murni — skor inlier"),
@@ -311,6 +326,132 @@ def _():
         assert T.ascii_aman(label).isascii()
         assert "?" not in T.ascii_aman(label), f"label '{label}' jadi '?'"
     return "em-dash & panah diganti, semua label sidebar bersih"
+
+
+@uji("keypoint: titik tersebar di seluruh gambar, tidak mengkerut ke pojok")
+def _():
+    """Bug nyata yang ketahuan dari layar, bukan dari error.
+
+    Ekstraktor mengembalikan koordinat dalam ukuran gambar ASLI. Kode tampilan
+    sempat membaginya lagi dengan faktor resize; untuk foto yang lebih kecil
+    dari SISI_PROSES faktornya >1, sehingga SEMUA titik mengkerut ke pojok
+    kiri-atas. Tidak ada exception, hanya overlay yang salah.
+
+    Uji: gambar titik yang tersebar di seluruh bidang, lalu pastikan piksel
+    kuning yang tergambar juga tersebar — bukan terkumpul di satu kuadran.
+    """
+    h, w = 400, 600
+    kanvas = np.zeros((h, w, 3), np.uint8)
+    rng = np.random.default_rng(0)
+    pts = np.stack([rng.uniform(10, w - 10, 400),
+                    rng.uniform(10, h - 10, 400)], axis=1)
+    T.gambar_keypoint(kanvas, pts, 1.0, 0, 0)
+    ys, xs = np.where(kanvas.any(axis=2))
+    assert len(xs) > 0, "tidak ada titik tergambar"
+    # sebaran harus menutupi mayoritas bidang, bukan satu pojok
+    assert xs.max() > 0.75 * w and ys.max() > 0.75 * h, \
+        f"titik cuma sampai ({xs.max()}, {ys.max()}) dari ({w}, {h}) — mengkerut"
+    kiri_atas = ((xs < w / 2) & (ys < h / 2)).mean()
+    assert kiri_atas < 0.45, \
+        f"{kiri_atas:.0%} titik menumpuk di kuadran kiri-atas — skala ganda"
+
+    # dan skala 0.5 memang HARUS mengecilkan (kontrol positif)
+    kanvas2 = np.zeros((h, w, 3), np.uint8)
+    T.gambar_keypoint(kanvas2, pts, 0.5, 0, 0)
+    ys2, xs2 = np.where(kanvas2.any(axis=2))
+    assert xs2.max() < xs.max() * 0.65, "skala tidak berpengaruh sama sekali"
+    return f"tersebar sampai ({xs.max()}, {ys.max()}), kiri-atas {kiri_atas:.0%}"
+
+
+@uji("keypoint: koordinat dipetakan dari gambar praproses ke frame asli")
+def _():
+    """Bug kedua yang ketahuan dari layar. Keypoint diekstrak dari gambar
+    SETELAH preprocessing (mis. resize368 -> 368x368), tapi digambar di atas
+    frame ASLI yang ukurannya lain. Tanpa pemetaan, titik meluber keluar
+    gambar atau menumpuk di satu sudut.
+
+    Kondisi seperti resize368 mengubah lebar dan tinggi dengan faktor BERBEDA,
+    jadi skalanya harus per sumbu — satu angka skala tidak cukup.
+    """
+    for (fw, fh), (pw, ph) in [((253, 227), (368, 368)),
+                               ((800, 600), (368, 368)),
+                               ((640, 480), (512, 512))]:
+        rng = np.random.default_rng(0)
+        kp = np.stack([rng.uniform(0, pw, 300), rng.uniform(0, ph, 300)], 1)
+        kp_asli = kp * np.array([fw / pw, fh / ph], np.float32)
+        assert kp_asli[:, 0].max() <= fw + 1, \
+            f"x meluber: {kp_asli[:, 0].max():.0f} > {fw}"
+        assert kp_asli[:, 1].max() <= fh + 1, \
+            f"y meluber: {kp_asli[:, 1].max():.0f} > {fh}"
+        # dan harus benar-benar memakai lebar penuh, bukan mengkerut
+        assert kp_asli[:, 0].max() > 0.8 * fw and kp_asli[:, 1].max() > 0.8 * fh, \
+            "titik mengkerut, tidak memakai bidang penuh"
+    return "3 kombinasi ukuran, semua muat dan mengisi penuh"
+
+
+@uji("panel: pesan galat menyebut perintah perbaikannya, bukan 'belum ada'")
+def _():
+    """Kalau embedding galeri untuk sebuah kondisi belum dihitung, panel harus
+    memberi tahu PERINTAH yang memperbaikinya. 'belum ada' saja membuat alat
+    ini selalu perlu ditanyakan ke orang lain."""
+    tel = telemetry_uji() | {
+        "galat": "embedding galeri untuk 'resize368' belum ada - jalankan: "
+                 "MODEL=T python3 jalankan.py resize368"}
+    dgn = T.susun(frame_uji(), state_uji(), tel, None, [], 1500, 880)
+    tanpa = T.susun(frame_uji(), state_uji(), telemetry_uji(), None, [],
+                    1500, 880)
+    x = 1500 - T.LEBAR_PANEL
+    assert (dgn[:, x:] != tanpa[:, x:]).any(), "pesan galat tidak tergambar"
+    return "galat tampil di panel putusan"
+
+
+@uji("sidebar: bisa di-scroll dan area klik ikut bergeser")
+def _():
+    """Sidebar sekarang punya 11 kondisi preprocessing + matcher + mode, jadi
+    isinya melebihi tinggi layar. Yang paling berbahaya bukan isinya terpotong,
+    tapi kalau geseran hanya diterapkan saat MENGGAMBAR dan tidak saat
+    hit-test klik — tombol akan menekan hal yang salah tanpa error apa pun."""
+    st = state_uji()
+    baris = T.bangun_baris_sidebar(st)
+    maks = T.batas_geser(baris, 880)
+    assert maks > 0, "isi sidebar tidak melebihi layar, tes ini tidak bermakna"
+
+    for geser in (0, 60, maks):
+        st["geser"] = geser
+        geo = T.geometri_sidebar(baris, 880, geser)
+        for i, y0, y1 in geo:
+            tengah = (y0 + y1) // 2
+            if tengah < 44 or tengah > 880:      # tergulung keluar layar
+                continue
+            got = T.klik_sidebar(st, 100, tengah, 880)
+            assert got == baris[i][2], \
+                f"geser={geser}: klik y={tengah} -> {got}, harusnya {baris[i][2]}"
+
+    # menggulung harus benar-benar mengubah tampilan
+    a = T.susun(frame_uji(), state_uji() | {"geser": 0}, telemetry_uji(),
+                None, [], 1500, 880)
+    b = T.susun(frame_uji(), state_uji() | {"geser": maks}, telemetry_uji(),
+                None, [], 1500, 880)
+    assert (a[:, :T.LEBAR_SIDEBAR] != b[:, :T.LEBAR_SIDEBAR]).any(), \
+        "sidebar tidak berubah saat digulung"
+    return f"batas geser {maks}px, area klik cocok di 3 posisi"
+
+
+@uji("panel: opsi terbaik tampil dan menandai apakah sedang dipakai")
+def _():
+    t1 = telemetry_uji() | {"terbaik": {
+        "label": "xfeat + resize512 - murni (k=50)", "rank1": 75.0,
+        "rank5": 83.33, "mAP": 79.0, "aktif": True}}
+    t2 = telemetry_uji() | {"terbaik": dict(t1["terbaik"], aktif=False)}
+    kosong = T.susun(frame_uji(), state_uji(), telemetry_uji(), None, [],
+                     1500, 880)
+    aktif = T.susun(frame_uji(), state_uji(), t1, None, [], 1500, 880)
+    tidak = T.susun(frame_uji(), state_uji(), t2, None, [], 1500, 880)
+    x = 1500 - T.LEBAR_PANEL
+    assert (kosong[:, x:] != aktif[:, x:]).any(), "panel opsi terbaik tidak tampil"
+    assert (aktif[:, x:] != tidak[:, x:]).any(), \
+        "tidak membedakan 'sedang dipakai' dari 'bukan yang dipakai'"
+    return "tampil, dan status aktif/tidak dibedakan"
 
 
 @uji("kamera IP: URL salah ketik dibetulkan otomatis")

@@ -38,6 +38,24 @@ LANGSUNG = {
         ("xfeat.pt",
          "https://github.com/verlab/accelerated_features/raw/main/weights/xfeat.pt"),
     ],
+    # ALIKED: arsitekturnya SUDAH ada di kornia yang terpasang; yang hilang
+    # cuma bobotnya. Diunduh ke folder ini supaya bisa dimuat offline —
+    # kalau dibiarkan kornia yang mengunduh, berkasnya masuk cache global
+    # yang tidak ikut ter-mount dan tetap tidak terpakai.
+    "aliked": [
+        ("aliked-n16.pth",
+         "https://github.com/Shiaoming/ALIKED/raw/main/models/aliked-n16.pth"),
+    ],
+    # RoMa: dua berkas. CATATAN JUJUR — walau bobotnya lengkap, RoMa tetap
+    # TIDAK bisa jalan di sandbox eksperimen karena paket `romatch` butuh
+    # `poselib` dan `fused-local-corr` yang tidak punya wheel untuk
+    # aarch64 Linux. Jadi RoMa hanya bisa dijalankan di Mac ini.
+    "roma": [
+        ("roma_outdoor.pth",
+         "https://github.com/Parskatt/storage/releases/download/roma/roma_outdoor.pth"),
+        ("dinov2_vitl14_pretrain.pth",
+         "https://dl.fbaipublicfiles.com/dinov2/dinov2_vitl14/dinov2_vitl14_pretrain.pth"),
+    ],
 }
 
 # Yang lebih mudah lewat paket + torch.hub / kornia.

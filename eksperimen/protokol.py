@@ -226,6 +226,28 @@ def _grayscale(rgb):
     return cv2.cvtColor(g, cv2.COLOR_GRAY2RGB)
 
 
+def _resize(rgb, n):
+    """Samakan semua foto ke n x n. Lihat _resize368 untuk penjelasan lengkap."""
+    return cv2.resize(rgb, (n, n), interpolation=cv2.INTER_AREA)
+
+
+def _resize368(rgb):
+    """Samakan SEMUA foto ke 368x368 sebelum masuk pipeline.
+
+    Foto ReunionTurtles ukurannya beragam, dari 253x227 sampai 800x600.
+    Kondisi ini menyeragamkannya lebih dulu, jadi tiap gambar punya resolusi
+    efektif yang sama saat masuk model dan saat masuk matcher stage-2.
+
+    CATATAN: ini BUKAN mengubah ukuran input model. MegaDescriptor-L-384
+    adalah Swin dengan `fixed_input_size=True` dan menolak apa pun selain
+    384x384 (`AssertionError: Input height (368) doesn't match model (384)`).
+    Jadi urutannya: asli -> 368x368 -> transform kanonik -> 384x384 -> model.
+    Artinya ada langkah naik 368->384; kalau kondisi ini menang, kemenangannya
+    datang dari penyeragaman resolusi, bukan dari angka 368 itu sendiri.
+    """
+    return cv2.resize(rgb, (368, 368), interpolation=cv2.INTER_AREA)
+
+
 def _crop_tengah(rgb, frac):
     h, w = rgb.shape[:2]
     ch, cw = int(round(h * frac)), int(round(w * frac))
@@ -242,6 +264,14 @@ KONDISI = {
     "clahe":     _clahe,
     "gray":      _grayscale,
     "crop_wb":   lambda im: _white_balance(_crop_tengah(im, 0.70)),
+    "resize368": _resize368,
+    # Sapu ukuran: 368 dipilih karena kebetulan disebut, bukan dioptimasi.
+    # Kalau yang menolong memang penyeragaman skala (bukan angka 368),
+    # ukuran lain harus memberi efek serupa. Diuji, bukan diasumsikan.
+    "resize256": lambda im: _resize(im, 256),
+    "resize320": lambda im: _resize(im, 320),
+    "resize448": lambda im: _resize(im, 448),
+    "resize512": lambda im: _resize(im, 512),
 }
 
 LABEL = {
@@ -251,6 +281,11 @@ LABEL = {
     "clahe": "CLAHE (L, clip 2.0)",
     "gray": "Grayscale",
     "crop_wb": "Crop + white balance",
+    "resize368": "Resize seragam 368x368",
+    "resize256": "Resize seragam 256x256",
+    "resize320": "Resize seragam 320x320",
+    "resize448": "Resize seragam 448x448",
+    "resize512": "Resize seragam 512x512",
 }
 
 

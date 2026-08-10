@@ -4,7 +4,7 @@
   "model": "L",
   "dataset": "reunion",
   "dataset_hash": "6a561d9dc6a5791e",
-  "dibuat": "2026-08-10 14:36",
+  "dibuat": "2026-08-10 19:03",
   "baris": [
     {
       "matcher": "-",
@@ -555,16 +555,466 @@
         "n_discordant": 11,
         "p_value": 0.0654296875
       }
+    },
+    {
+      "matcher": "xfeat",
+      "kondisi": "resize368",
+      "mode": "murni",
+      "label": "MegaDesc + XFEAT (Resize seragam 368x368) \u00b7 murni",
+      "rank1": 54.761904761904766,
+      "rank5": 64.28571428571429,
+      "mAP": 60.31367447211091,
+      "hijau": 57.99999999999999,
+      "sisik": 50.0,
+      "delta_rank1": {
+        "delta": 29.761904761904763,
+        "ci95": [
+          22.023809523809526,
+          38.095238095238095
+        ],
+        "signifikan": true
+      },
+      "delta_mAP": {
+        "delta": 22.914953617422107,
+        "ci95": [
+          16.937357638430175,
+          28.969615739473518
+        ],
+        "signifikan": true
+      },
+      "mcnemar_rank1": {
+        "n01_baseline_salah_kondisi_benar": 56,
+        "n10_baseline_benar_kondisi_salah": 6,
+        "n_discordant": 62,
+        "p_value": 2.972584851879123e-11
+      },
+      "hijau_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 37,
+        "n10_baseline_benar_kondisi_salah": 1,
+        "n_discordant": 38,
+        "p_value": 2.837623469531536e-10
+      },
+      "sisik_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 19,
+        "n10_baseline_benar_kondisi_salah": 5,
+        "n_discordant": 24,
+        "p_value": 0.006610751152038574
+      }
+    },
+    {
+      "matcher": "xfeat",
+      "kondisi": "resize368",
+      "mode": "rrf",
+      "label": "MegaDesc + XFEAT (Resize seragam 368x368) \u00b7 rrf",
+      "rank1": 38.69047619047619,
+      "rank5": 60.11904761904761,
+      "mAP": 49.1927083015262,
+      "hijau": 34.0,
+      "sisik": 45.588235294117645,
+      "delta_rank1": {
+        "delta": 13.69047619047619,
+        "ci95": [
+          8.333333333333334,
+          19.047619047619047
+        ],
+        "signifikan": true
+      },
+      "delta_mAP": {
+        "delta": 11.793987446837404,
+        "ci95": [
+          8.5004517016469,
+          15.262828802185005
+        ],
+        "signifikan": true
+      },
+      "mcnemar_rank1": {
+        "n01_baseline_salah_kondisi_benar": 24,
+        "n10_baseline_benar_kondisi_salah": 1,
+        "n_discordant": 25,
+        "p_value": 1.5497207641601562e-06
+      },
+      "hijau_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 13,
+        "n10_baseline_benar_kondisi_salah": 1,
+        "n_discordant": 14,
+        "p_value": 0.0018310546875
+      },
+      "sisik_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 11,
+        "n10_baseline_benar_kondisi_salah": 0,
+        "n_discordant": 11,
+        "p_value": 0.0009765625
+      }
+    },
+    {
+      "matcher": "xfeat",
+      "kondisi": "resize256",
+      "mode": "murni",
+      "label": "MegaDesc + XFEAT (Resize seragam 256x256) \u00b7 murni",
+      "rank1": 47.023809523809526,
+      "rank5": 60.11904761904761,
+      "mAP": 53.81045494727484,
+      "hijau": 48.0,
+      "sisik": 45.588235294117645,
+      "delta_rank1": {
+        "delta": 22.023809523809526,
+        "ci95": [
+          14.285714285714286,
+          29.761904761904763
+        ],
+        "signifikan": true
+      },
+      "delta_mAP": {
+        "delta": 16.411734092586038,
+        "ci95": [
+          10.407679842054497,
+          22.548670215693928
+        ],
+        "signifikan": true
+      },
+      "mcnemar_rank1": {
+        "n01_baseline_salah_kondisi_benar": 45,
+        "n10_baseline_benar_kondisi_salah": 8,
+        "n_discordant": 53,
+        "p_value": 2.3683513772354559e-07
+      },
+      "hijau_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 29,
+        "n10_baseline_benar_kondisi_salah": 3,
+        "n_discordant": 32,
+        "p_value": 2.5560148060321808e-06
+      },
+      "sisik_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 16,
+        "n10_baseline_benar_kondisi_salah": 5,
+        "n_discordant": 21,
+        "p_value": 0.02660369873046875
+      }
+    },
+    {
+      "matcher": "xfeat",
+      "kondisi": "resize256",
+      "mode": "rrf",
+      "label": "MegaDesc + XFEAT (Resize seragam 256x256) \u00b7 rrf",
+      "rank1": 32.73809523809524,
+      "rank5": 56.547619047619044,
+      "mAP": 44.728355689852165,
+      "hijau": 30.0,
+      "sisik": 36.76470588235294,
+      "delta_rank1": {
+        "delta": 7.738095238095238,
+        "ci95": [
+          2.380952380952381,
+          13.095238095238095
+        ],
+        "signifikan": true
+      },
+      "delta_mAP": {
+        "delta": 7.329634835163363,
+        "ci95": [
+          3.9629215970039313,
+          10.798736368627315
+        ],
+        "signifikan": true
+      },
+      "mcnemar_rank1": {
+        "n01_baseline_salah_kondisi_benar": 18,
+        "n10_baseline_benar_kondisi_salah": 5,
+        "n_discordant": 23,
+        "p_value": 0.010622024536132812
+      },
+      "hijau_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 9,
+        "n10_baseline_benar_kondisi_salah": 1,
+        "n_discordant": 10,
+        "p_value": 0.021484375
+      },
+      "sisik_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 9,
+        "n10_baseline_benar_kondisi_salah": 4,
+        "n_discordant": 13,
+        "p_value": 0.266845703125
+      }
+    },
+    {
+      "matcher": "xfeat",
+      "kondisi": "resize320",
+      "mode": "murni",
+      "label": "MegaDesc + XFEAT (Resize seragam 320x320) \u00b7 murni",
+      "rank1": 54.166666666666664,
+      "rank5": 63.69047619047619,
+      "mAP": 59.720986613832615,
+      "hijau": 56.00000000000001,
+      "sisik": 51.470588235294116,
+      "delta_rank1": {
+        "delta": 29.166666666666668,
+        "ci95": [
+          21.428571428571427,
+          36.904761904761905
+        ],
+        "signifikan": true
+      },
+      "delta_mAP": {
+        "delta": 22.3222657591438,
+        "ci95": [
+          16.345465091733335,
+          28.512004335853366
+        ],
+        "signifikan": true
+      },
+      "mcnemar_rank1": {
+        "n01_baseline_salah_kondisi_benar": 55,
+        "n10_baseline_benar_kondisi_salah": 6,
+        "n_discordant": 61,
+        "p_value": 5.380614009897755e-11
+      },
+      "hijau_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 35,
+        "n10_baseline_benar_kondisi_salah": 1,
+        "n_discordant": 36,
+        "p_value": 1.076841726899147e-09
+      },
+      "sisik_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 20,
+        "n10_baseline_benar_kondisi_salah": 5,
+        "n_discordant": 25,
+        "p_value": 0.004077315330505371
+      }
+    },
+    {
+      "matcher": "xfeat",
+      "kondisi": "resize320",
+      "mode": "rrf",
+      "label": "MegaDesc + XFEAT (Resize seragam 320x320) \u00b7 rrf",
+      "rank1": 36.30952380952381,
+      "rank5": 57.14285714285714,
+      "mAP": 47.070053865666885,
+      "hijau": 33.0,
+      "sisik": 41.17647058823529,
+      "delta_rank1": {
+        "delta": 11.30952380952381,
+        "ci95": [
+          6.5476190476190474,
+          16.666666666666668
+        ],
+        "signifikan": true
+      },
+      "delta_mAP": {
+        "delta": 9.67133301097808,
+        "ci95": [
+          6.462724527328823,
+          13.035720625407157
+        ],
+        "signifikan": true
+      },
+      "mcnemar_rank1": {
+        "n01_baseline_salah_kondisi_benar": 21,
+        "n10_baseline_benar_kondisi_salah": 2,
+        "n_discordant": 23,
+        "p_value": 6.604194641113281e-05
+      },
+      "hijau_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 12,
+        "n10_baseline_benar_kondisi_salah": 1,
+        "n_discordant": 13,
+        "p_value": 0.00341796875
+      },
+      "sisik_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 9,
+        "n10_baseline_benar_kondisi_salah": 1,
+        "n_discordant": 10,
+        "p_value": 0.021484375
+      }
+    },
+    {
+      "matcher": "xfeat",
+      "kondisi": "resize448",
+      "mode": "murni",
+      "label": "MegaDesc + XFEAT (Resize seragam 448x448) \u00b7 murni",
+      "rank1": 60.11904761904761,
+      "rank5": 67.85714285714286,
+      "mAP": 64.4603542585104,
+      "hijau": 63.0,
+      "sisik": 55.88235294117647,
+      "delta_rank1": {
+        "delta": 35.11904761904762,
+        "ci95": [
+          27.38095238095238,
+          42.857142857142854
+        ],
+        "signifikan": true
+      },
+      "delta_mAP": {
+        "delta": 27.0616334038216,
+        "ci95": [
+          20.97763201269497,
+          33.370299466630605
+        ],
+        "signifikan": true
+      },
+      "mcnemar_rank1": {
+        "n01_baseline_salah_kondisi_benar": 63,
+        "n10_baseline_benar_kondisi_salah": 4,
+        "n_discordant": 67,
+        "p_value": 1.1067861037383775e-14
+      },
+      "hijau_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 42,
+        "n10_baseline_benar_kondisi_salah": 1,
+        "n_discordant": 43,
+        "p_value": 1.000444171950221e-11
+      },
+      "sisik_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 21,
+        "n10_baseline_benar_kondisi_salah": 3,
+        "n_discordant": 24,
+        "p_value": 0.0002771615982055664
+      }
+    },
+    {
+      "matcher": "xfeat",
+      "kondisi": "resize448",
+      "mode": "rrf",
+      "label": "MegaDesc + XFEAT (Resize seragam 448x448) \u00b7 rrf",
+      "rank1": 38.69047619047619,
+      "rank5": 63.69047619047619,
+      "mAP": 49.74413380568281,
+      "hijau": 37.0,
+      "sisik": 41.17647058823529,
+      "delta_rank1": {
+        "delta": 13.69047619047619,
+        "ci95": [
+          7.738095238095238,
+          19.642857142857142
+        ],
+        "signifikan": true
+      },
+      "delta_mAP": {
+        "delta": 12.345412950994,
+        "ci95": [
+          8.81238645003814,
+          16.043570452541523
+        ],
+        "signifikan": true
+      },
+      "mcnemar_rank1": {
+        "n01_baseline_salah_kondisi_benar": 26,
+        "n10_baseline_benar_kondisi_salah": 3,
+        "n_discordant": 29,
+        "p_value": 1.5236437320709229e-05
+      },
+      "hijau_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 16,
+        "n10_baseline_benar_kondisi_salah": 1,
+        "n_discordant": 17,
+        "p_value": 0.000274658203125
+      },
+      "sisik_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 10,
+        "n10_baseline_benar_kondisi_salah": 2,
+        "n_discordant": 12,
+        "p_value": 0.03857421875
+      }
+    },
+    {
+      "matcher": "xfeat",
+      "kondisi": "resize512",
+      "mode": "murni",
+      "label": "MegaDesc + XFEAT (Resize seragam 512x512) \u00b7 murni",
+      "rank1": 62.5,
+      "rank5": 67.26190476190477,
+      "mAP": 66.04617288083112,
+      "hijau": 63.0,
+      "sisik": 61.76470588235294,
+      "delta_rank1": {
+        "delta": 37.5,
+        "ci95": [
+          29.761904761904763,
+          45.23809523809524
+        ],
+        "signifikan": true
+      },
+      "delta_mAP": {
+        "delta": 28.64745202614232,
+        "ci95": [
+          22.54128661967077,
+          35.11331114747917
+        ],
+        "signifikan": true
+      },
+      "mcnemar_rank1": {
+        "n01_baseline_salah_kondisi_benar": 66,
+        "n10_baseline_benar_kondisi_salah": 3,
+        "n_discordant": 69,
+        "p_value": 1.857035033560328e-16
+      },
+      "hijau_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 42,
+        "n10_baseline_benar_kondisi_salah": 1,
+        "n_discordant": 43,
+        "p_value": 1.000444171950221e-11
+      },
+      "sisik_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 24,
+        "n10_baseline_benar_kondisi_salah": 2,
+        "n_discordant": 26,
+        "p_value": 1.049041748046875e-05
+      }
+    },
+    {
+      "matcher": "xfeat",
+      "kondisi": "resize512",
+      "mode": "rrf",
+      "label": "MegaDesc + XFEAT (Resize seragam 512x512) \u00b7 rrf",
+      "rank1": 38.69047619047619,
+      "rank5": 60.11904761904761,
+      "mAP": 49.59662947259964,
+      "hijau": 36.0,
+      "sisik": 42.64705882352941,
+      "delta_rank1": {
+        "delta": 13.69047619047619,
+        "ci95": [
+          8.333333333333334,
+          19.642857142857142
+        ],
+        "signifikan": true
+      },
+      "delta_mAP": {
+        "delta": 12.19790861791083,
+        "ci95": [
+          8.621740768599183,
+          15.928017760121572
+        ],
+        "signifikan": true
+      },
+      "mcnemar_rank1": {
+        "n01_baseline_salah_kondisi_benar": 25,
+        "n10_baseline_benar_kondisi_salah": 2,
+        "n_discordant": 27,
+        "p_value": 5.647540092468262e-06
+      },
+      "hijau_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 15,
+        "n10_baseline_benar_kondisi_salah": 1,
+        "n_discordant": 16,
+        "p_value": 0.000518798828125
+      },
+      "sisik_mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 10,
+        "n10_baseline_benar_kondisi_salah": 1,
+        "n_discordant": 11,
+        "p_value": 0.01171875
+      }
     }
   ],
   "belum_ada_bobot": [
     {
       "matcher": "aliked",
-      "alasan": "bobot ALIKED dari github release / HF \u2014 keduanya 403 di sini"
+      "alasan": "bobot sudah ada di bobot_matcher/aliked-n16.pth, TAPI kornia 0.8.2 yang terpasang tidak punya kelas ALIKED (`kornia.feature.aliked` tidak ada). Butuh kornia versi lain atau implementasi resmi ALIKED, yang reponya diblokir di sini."
     },
     {
       "matcher": "roma",
-      "alasan": "RoMa butuh backbone DINOv2; dl.fbaipublicfiles.com dan HF keduanya 403 di sini"
+      "alasan": "bobot roma_outdoor.pth + dinov2_vitl14 sudah ada, TAPI paket `romatch` tidak bisa dipasang di aarch64 Linux: poselib dan fused-local-corr tidak punya wheel. Hanya bisa dijalankan di Mac."
     }
   ]
 }

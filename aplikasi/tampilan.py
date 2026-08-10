@@ -95,7 +95,15 @@ def bangun_baris_sidebar(state):
     """Satu sumber kebenaran untuk yang digambar DAN yang bisa diklik.
     Kalau dipisah, area klik dan area terlihat pasti bergeser cepat atau
     lambat, dan tombol akan menekan hal yang salah tanpa error."""
-    b = [("judul", "PREPROCESSING", None, False)]
+    b = [("judul", "SUMBER", None, False)]
+    for k, label in state.get("sumber_pilihan", []):
+        b.append(("opsi", label, ("sumber", k), state.get("sumber") == k))
+    if state.get("sumber") == "dataset":
+        b.append(("opsi", "[<] sebelumnya   [>] berikutnya",
+                  ("nav", "next"), False))
+        b.append(("opsi", state.get("info_query", ""), None, False))
+
+    b.append(("judul", "PREPROCESSING", None, False))
     for k, label in state["kondisi_pilihan"]:
         b.append(("opsi", label, ("kondisi", k), state["kondisi"] == k))
 
@@ -126,8 +134,23 @@ def bangun_baris_sidebar(state):
     return b
 
 
-def geometri_sidebar(baris, tinggi=None):
+def tinggi_sidebar(baris):
+    """Tinggi total isi sidebar. Dipakai untuk membatasi scroll supaya tidak
+    bisa digeser melewati ujung isinya."""
     y = 52
+    for jenis, _, _, _ in baris:
+        y += 28 if jenis == "judul" else 23
+    return y + 12
+
+
+def geometri_sidebar(baris, tinggi=None, geser=0):
+    """(indeks, y0, y1) tiap baris yang bisa diklik, SUDAH termasuk geseran.
+
+    Satu fungsi ini dipakai untuk menggambar DAN untuk hit-test klik. Kalau
+    geserannya hanya diterapkan di salah satu, tombol akan menekan hal yang
+    salah begitu sidebar di-scroll — dan tidak ada error yang muncul.
+    """
+    y = 52 - geser
     keluar = []
     for i, (jenis, _, kunci, _) in enumerate(baris):
         if jenis == "judul":
@@ -139,15 +162,20 @@ def geometri_sidebar(baris, tinggi=None):
     return keluar
 
 
+def batas_geser(baris, tinggi_kanvas):
+    return max(0, tinggi_sidebar(baris) - tinggi_kanvas + 8)
+
+
 def gambar_sidebar(kanvas, state):
     h = kanvas.shape[0]
     kotak(kanvas, 0, 0, LEBAR_SIDEBAR, h, PANEL)
-    judul(kanvas, "RE-ID PENYU", (14, 26), 0.6)
-    teks(kanvas, "engineer tool", (14, 42), 0.36, REDUP)
 
     baris = bangun_baris_sidebar(state)
-    geo = {i: (a, b) for i, a, b in geometri_sidebar(baris)}
-    y = 52
+    maks = batas_geser(baris, h)
+    geser = int(np.clip(state.get("geser", 0), 0, maks))
+    state["geser"] = geser
+    geo = {i: (a, b) for i, a, b in geometri_sidebar(baris, h, geser)}
+    y = 52 - geser
     for i, (jenis, label, kunci, aktif) in enumerate(baris):
         if jenis == "judul":
             cv2.line(kanvas, (12, y + 3), (LEBAR_SIDEBAR - 12, y + 3),
@@ -156,20 +184,37 @@ def gambar_sidebar(kanvas, state):
             y += 28
             continue
         y0 = geo.get(i, (y, y + 21))[0]
+        if y0 < 44 or y0 > h - 8:        # di luar layar, lewati
+            y += 23
+            continue
         if aktif:
             kotak(kanvas, 8, y0, LEBAR_SIDEBAR - 16, 21, AKTIF)
             kotak(kanvas, 8, y0, 3, 21, KUNING)
         teks(kanvas, label, (18, y0 + 15), 0.41,
              TEKS if aktif else REDUP, 2 if aktif else 1)
         y += 23
+
+    # kepala menimpa isi yang tergeser, supaya judul selalu terbaca
+    kotak(kanvas, 0, 0, LEBAR_SIDEBAR, 44, PANEL)
+    judul(kanvas, "RE-ID PENYU", (14, 26), 0.6)
+    teks(kanvas, "engineer tool", (14, 40), 0.34, REDUP)
+
+    if maks > 0:                          # batang scroll
+        tinggi_bar = max(30, int(h * h / (h + maks)))
+        y_bar = 44 + int((h - 44 - tinggi_bar) * geser / maks)
+        kotak(kanvas, LEBAR_SIDEBAR - 5, 44, 3, h - 44, (60, 56, 52))
+        kotak(kanvas, LEBAR_SIDEBAR - 5, y_bar, 3, tinggi_bar, KUNING)
+        teks(kanvas, "scroll: roda / PgUp PgDn", (14, h - 6), 0.32, REDUP)
     return kanvas
 
 
 def klik_sidebar(state, x, y, tinggi=None):
     if x >= LEBAR_SIDEBAR:
         return None
+    if y < 44:                            # area judul, bukan tombol
+        return None
     baris = bangun_baris_sidebar(state)
-    for i, y0, y1 in geometri_sidebar(baris):
+    for i, y0, y1 in geometri_sidebar(baris, tinggi, state.get("geser", 0)):
         if y0 <= y <= y1:
             return baris[i][2]
     return None
@@ -286,8 +331,25 @@ def gambar_panel(kanvas, x0, tinggi, t, hasil, ambang, ringkas):
     y += 12
 
     if hasil is None:
-        teks(kanvas, "belum ada", (x0 + 12, y + 20), 0.42, REDUP)
-        y += 40
+        galat = t.get("galat")
+        if galat:
+            # Pesan galat harus menyebut PERINTAH yang memperbaikinya, bukan
+            # cuma "belum ada" — itu yang membedakan alat yang bisa dipakai
+            # sendiri dari alat yang selalu perlu ditanyakan.
+            kotak(kanvas, x0 + 12, y, LEBAR_PANEL - 24, 3, MERAH)
+            y += 14
+            kata, baris_ = galat.split(), ""
+            for w in kata:
+                if len(baris_) + len(w) > 34:
+                    teks(kanvas, baris_, (x0 + 14, y), 0.33, MERAH)
+                    y += 12
+                    baris_ = ""
+                baris_ += w + " "
+            teks(kanvas, baris_, (x0 + 14, y), 0.33, MERAH)
+            y += 22
+        else:
+            teks(kanvas, "belum ada", (x0 + 12, y + 20), 0.42, REDUP)
+            y += 40
     else:
         kenal = hasil["skor"] >= ambang
         warna = HIJAU if kenal else MERAH
@@ -324,7 +386,28 @@ def gambar_panel(kanvas, x0, tinggi, t, hasil, ambang, ringkas):
         teks(kanvas, k, (x0 + 14, y), 0.36, REDUP)
         teks(kanvas, v, (x0 + 150, y), 0.36, TEKS, 1)
 
-    y += 26
+    y += 24
+    terbaik = t.get("terbaik")
+    if terbaik:
+        judul(kanvas, "OPSI TERBAIK", (x0 + 12, y), 0.4, HIJAU)
+        y += 10
+        kotak(kanvas, x0 + 12, y, LEBAR_PANEL - 24, 62, (24, 34, 24))
+        cv2.rectangle(kanvas, (x0 + 12, y),
+                      (x0 + LEBAR_PANEL - 12, y + 62), HIJAU, 1)
+        judul(kanvas, f"Rank-1 {terbaik['rank1']:.2f}%", (x0 + 20, y + 20),
+              0.5, HIJAU)
+        teks(kanvas, f"Rank-5 {terbaik['rank5']:.2f}%  mAP {terbaik['mAP']:.2f}%",
+             (x0 + 20, y + 36), 0.36, TEKS)
+        teks(kanvas, terbaik["label"][:38], (x0 + 20, y + 52), 0.33, REDUP)
+        y += 74
+        if terbaik.get("aktif"):
+            teks(kanvas, "^ konfigurasi ini sedang dipakai", (x0 + 14, y),
+                 0.33, HIJAU)
+        else:
+            teks(kanvas, "^ BUKAN yang sedang dipakai", (x0 + 14, y), 0.33, BIRU)
+        y += 18
+
+    y += 8
     judul(kanvas, "AKURASI TERUKUR", (x0 + 12, y), 0.4, KUNING)
     y += 8
     if not ringkas:

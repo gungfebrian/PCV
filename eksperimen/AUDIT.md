@@ -143,3 +143,53 @@ protokol seketat ini, 25% adalah baseline yang wajar. Tebak acak = 1,19%.
    di ReunionTurtles. Memakai T akan membuang headroom yang dibutuhkan untuk
    mendeteksi efek preprocessing.
 5. `TRANSFORM="squash"` untuk semua kondisi.
+
+## 7. Bias spesies: diuji, tidak terbukti (10 Agu 2026)
+
+Klaim yang perlu diperiksa: *"dataset kebanyakan green turtle, jadi hasilnya
+bias."* Komposisinya memang timpang, tapi akibatnya tidak terukur.
+
+| Spesies | Individu | Foto | Query | Rank-1 (XFeat+resize512, k=50) |
+|---|---|---|---|---|
+| Green | 50 | 200 | 100 | 78,00% (78/100) |
+| Hawksbill | 34 | 136 | 68 | 70,59% (48/68) |
+| Olive ridley | 0 | 0 | 0 | — |
+
+Selisih +7,41 poin. **Fisher exact p = 0,283**, CI95 selisih
+**[-6,35, +20,76]** — melewati nol. Selisih 7 poin pada n segini adalah noise,
+bukan bukti bias spesies.
+
+Secara mekanis ini masuk akal: **tidak ada bobot yang dilatih pada penyu mana
+pun.** MegaDescriptor beku, XFeat beku (dilatih untuk pencocokan gambar umum).
+Tidak ada jalur yang bisa membuat model "lebih hafal" green karena fotonya
+lebih banyak. Artinya angka hawksbill sudah merupakan hasil generalisasi
+lintas spesies — dan alasan kuat untuk menguji olive ridley TANPA melatih
+lebih dulu.
+
+Arah sebaliknya di stage-1 saja: green 22,00% vs hawksbill 29,41%. Tambahan
+alasan untuk tidak menyimpulkan apa pun dari selisih spesies pada n sekecil ini.
+
+## 8. Kontrak matcher (10 Agu 2026)
+
+Aplikasi dulu menebak jenis matcher lewat `hasattr(mm, "X")` lalu jatuh ke
+`mm.det.detectAndCompute`. RoMa tidak punya keduanya, jadi memilih RoMa di UI
+langsung melempar `AttributeError: 'RoMa' object has no attribute 'det'`.
+Menebak tipe seperti itu akan rusak lagi setiap kali satu matcher ditambahkan.
+
+Semua kelas matcher di `rerank.py` sekarang memenuhi kontrak yang sama:
+
+    .ekstrak(path)          fitur dari berkas       (jalur eksperimen)
+    .ekstrak_array(rgb)     fitur dari array RGB    (jalur kamera/aplikasi)
+    .korespondensi(a, b)    -> (src, dst) sebelum RANSAC
+    .skor(a, b)             -> jumlah inlier setelah RANSAC
+    .KOORD_ASLI             koordinat sudah dalam ukuran gambar asli?
+    .PUNYA_KEYPOINT         punya keypoint per gambar? (False untuk dense)
+
+`KOORD_ASLI` mengungkap perbedaan yang sebelumnya tersembunyi: SIFT
+mengembalikan koordinat pada gambar yang sudah diperkecil ke `SISI_PROSES`,
+sedangkan XFeat sudah membaginya kembali. Overlay keypoint SIFT karena itu
+salah tempat untuk foto besar.
+
+Skornya sendiri TIDAK berubah — `_inlier()` mempertahankan perilaku lama
+persis, termasuk mengembalikan jumlah pasangan mentah (0-3) saat homografi
+tidak bisa diestimasi. Dijamin oleh tes kesetaraan array-vs-berkas.
