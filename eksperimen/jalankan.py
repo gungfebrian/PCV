@@ -91,7 +91,8 @@ def main():
     model, cfg = P.muat_model()
     tulis_header(kat, gal, qry, cfg)
 
-    kondisi = [a for a in args if a in P.KONDISI] or list(P.KONDISI)
+    semua = list(P.KONDISI) + list(P.KONDISI_BERKAS)
+    kondisi = [a for a in args if a in semua] or list(P.KONDISI)
     for k in kondisi:
         d, n = jalankan_kondisi(k, gal, qry, model, budget=budget)
         print(f"{k:9} {d}/{n}")

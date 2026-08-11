@@ -63,6 +63,27 @@ MATCHER_TERBLOKIR = {
 }
 
 
+def baca_kondisi(path, kondisi):
+    """Baca gambar dan terapkan kondisi — SATU jalur untuk semua matcher.
+
+    Menangani dua jenis kondisi sekaligus:
+      - berbasis array (resize, CLAHE, ...) lewat `P.KONDISI`
+      - berbasis berkas (potongan kepala YOLO) lewat `P.KONDISI_BERKAS`,
+        yang potongannya sudah dihitung sebelumnya dan disimpan ke disk
+
+    Mengembalikan None kalau gambarnya tidak ada ATAU kondisi berkas tidak
+    punya entri untuk foto itu. Pemanggil harus menangani None secara sadar;
+    jatuh diam-diam ke gambar penuh akan mencampur dua kondisi berbeda ke
+    dalam satu angka tanpa memunculkan error.
+    """
+    if kondisi in getattr(P, "KONDISI_BERKAS", {}):
+        return P.KONDISI_BERKAS[kondisi](path)
+    bgr = cv2.imread(path)
+    if bgr is None:
+        return None
+    return P.KONDISI[kondisi](cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB))
+
+
 def _inlier(src, dst):
     """Jumlah inlier setelah RANSAC MAGSAC — SATU-SATUNYA definisi skor.
 
@@ -130,11 +151,8 @@ class Klasik:
         else:
             # preprocessing dipakai dari protokol yang sama dengan eksperimen
             # stage-1, bukan ditulis ulang di sini
-            bgr = cv2.imread(path)
-            if bgr is None:
-                return None
-            rgb = P.KONDISI[self.kondisi](cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB))
-            im = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
+            rgb = baca_kondisi(path, self.kondisi)
+            im = None if rgb is None else cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
         if im is None:
             return None
         s = SISI_PROSES / max(im.shape)
@@ -197,13 +215,11 @@ class XFeat:
         self.nama = "xfeat" if kondisi == "raw" else f"xfeat-{kondisi}"
 
     def ekstrak(self, path):
-        im = cv2.imread(path, cv2.IMREAD_GRAYSCALE) if self.kondisi == "raw" else None
-        if self.kondisi != "raw":
-            bgr = cv2.imread(path)
-            if bgr is None:
-                return None
-            rgb = P.KONDISI[self.kondisi](cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB))
-            im = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
+        if self.kondisi == "raw":
+            im = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+        else:
+            rgb = baca_kondisi(path, self.kondisi)
+            im = None if rgb is None else cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
         if im is None:
             return None
         return self.X.ekstrak(self.model, im, sisi=SISI_PROSES)
@@ -485,6 +501,58 @@ class RoMa:
         return _inlier(*self.korespondensi(a, b))
 
 
+class Normalisasi:
+    """Bungkus matcher lain dan ganti CARA SKOR DIHITUNG, bukan matchernya.
+
+    Kenapa ini dicoba: analisis kegagalan menunjukkan pasangan yang BENAR
+    hampir tidak pernah gagal mendapat inlier (cuma 0-2% yang di bawah 4),
+    tapi pasangan yang SALAH sering mendapat inlier lebih banyak lagi.
+    Artinya masalahnya bukan "pasangan benar tidak cocok", melainkan
+    "pasangan salah terlalu mudah menang".
+
+    Tersangka utamanya: jumlah inlier mentah memberi keuntungan gratis pada
+    foto galeri yang bertekstur ramai atau beresolusi besar — foto seperti itu
+    menghasilkan banyak korespondensi dengan APA PUN. Sama persis dengan
+    masalah hub pada retrieval, dan obatnya juga sama: bagi dengan ukurannya.
+
+        rasio    inlier / min(jumlah keypoint kedua gambar)
+        presisi  inlier / jumlah pasangan mentah sebelum RANSAC
+                 -> mengukur seberapa konsisten geometrinya, terlepas dari
+                    berapa banyak pasangan yang sempat diusulkan
+    """
+
+    def __init__(self, dalam, mode="rasio"):
+        self.dalam = dalam
+        self.mode = mode
+        self.nama = f"{dalam.nama}-{mode}"
+        self.kondisi = dalam.kondisi
+        self.KOORD_ASLI = getattr(dalam, "KOORD_ASLI", True)
+        self.PUNYA_KEYPOINT = getattr(dalam, "PUNYA_KEYPOINT", False)
+
+    def ekstrak(self, path):
+        return self.dalam.ekstrak(path)
+
+    def ekstrak_array(self, rgb):
+        return self.dalam.ekstrak_array(rgb)
+
+    def korespondensi(self, a, b):
+        return self.dalam.korespondensi(a, b)
+
+    def skor(self, a, b):
+        src, dst = self.korespondensi(a, b)
+        inl = _inlier(src, dst)
+        if inl <= 0:
+            return 0.0
+        if self.mode == "presisi":
+            n = len(src)
+        elif self.PUNYA_KEYPOINT and a is not None and b is not None:
+            n = min(len(a[0]), len(b[0]))
+        else:
+            n = len(src)
+        # dikali 1000 supaya tetap terbaca sebagai bilangan, bukan 0,0xx
+        return 1000.0 * inl / max(n, 1)
+
+
 BOBOT = os.path.join(P.BASE, "bobot_matcher")
 
 
@@ -543,9 +611,15 @@ def buat_matcher(nama, kondisi="raw"):
 
 
 # ------------------------------------------------------- inti re-rank
+# Embedding mana yang dipakai stage 1. Default "raw" supaya seluruh angka
+# yang sudah dilaporkan tetap sah. Diubah lewat --stage1 untuk menguji apakah
+# stage 1 juga terbantu oleh crop kepala.
+KONDISI_STAGE1 = os.environ.get("STAGE1", "raw")
+
+
 def kandidat_stage1(gal, qry, k):
     """Top-k kandidat per query dari stage 1. Sisi sudah dikunci di sini."""
-    Eg, Eq = muat("raw", gal, qry)
+    Eg, Eq = muat(KONDISI_STAGE1, gal, qry)
     s_g = np.array([r["side"] for r in gal])
     s_q = np.array([r["side"] for r in qry])
     S = Eq @ Eg.T
@@ -562,7 +636,8 @@ def jalankan(matcher, k, budget=None):
     gal, qry = P.bangun_split(kat)
     S, top, k = kandidat_stage1(gal, qry, k)
 
-    out = os.path.join(HASIL, f"rerank_{matcher.nama}_k{k}.npy")
+    tag = "" if KONDISI_STAGE1 == "raw" else f"_s1-{KONDISI_STAGE1}"
+    out = os.path.join(HASIL, f"rerank_{matcher.nama}{tag}_k{k}.npy")
     prog = out + ".progress"
     M = np.load(out) if os.path.exists(out) else np.full((len(qry), k), -1.0, np.float32)
     d = int(open(prog).read()) if os.path.exists(prog) else 0
@@ -612,6 +687,10 @@ def _skor_dari_urutan(urut, S_asli):
     return S
 
 
+def _tag_s1():
+    return "" if KONDISI_STAGE1 == "raw" else f"_s1-{KONDISI_STAGE1}"
+
+
 def evaluasi_rerank(nama_matcher, k):
     """Bandingkan stage-1 saja vs stage-1 + re-rank, pada query yang sama.
 
@@ -624,7 +703,7 @@ def evaluasi_rerank(nama_matcher, k):
     kat = P.baca_katalog()
     gal, qry = P.bangun_split(kat)
     S, top, k = kandidat_stage1(gal, qry, k)
-    M = np.load(os.path.join(HASIL, f"rerank_{nama_matcher}_k{k}.npy"))
+    M = np.load(os.path.join(HASIL, f"rerank_{nama_matcher}{_tag_s1()}_k{k}.npy"))
 
     id_g = np.array([r["identity"] for r in gal])
     id_q = np.array([r["identity"] for r in qry])
@@ -671,7 +750,8 @@ def lapor(nama_matcher, k):
         b.update(breakdown(h, qry))
         tabel[nama] = b
 
-    with open(os.path.join(HASIL, f"rerank_{nama_matcher}_k{k}.json"), "w") as f:
+    with open(os.path.join(HASIL,
+                           f"rerank_{nama_matcher}{_tag_s1()}_k{k}.json"), "w") as f:
         json.dump({"matcher": nama_matcher, "k": k,
                    "cv2": cv2.__version__, "model": P.MODEL,
                    "dataset": P.DATASET,
@@ -719,12 +799,17 @@ if __name__ == "__main__":
     ap.add_argument("--budget", type=float, default=35.0)
     ap.add_argument("--kondisi", default="raw")
     ap.add_argument("--lapor", action="store_true")
+    ap.add_argument("--skor", default="inlier",
+                    choices=["inlier", "rasio", "presisi"],
+                    help="cara skor dihitung; lihat kelas Normalisasi")
     a = ap.parse_args()
 
     if a.lapor:
         lapor(a.matcher, a.k)
     else:
         m = buat_matcher(a.matcher, a.kondisi)
+        if a.skor != "inlier":
+            m = Normalisasi(m, a.skor)
         selesai, _, k = jalankan(m, a.k, budget=a.budget)
         if selesai:
             lapor(m.nama, k)

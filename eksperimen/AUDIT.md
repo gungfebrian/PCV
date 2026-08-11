@@ -193,3 +193,56 @@ salah tempat untuk foto besar.
 Skornya sendiri TIDAK berubah — `_inlier()` mempertahankan perilaku lama
 persis, termasuk mengembalikan jumlah pasangan mentah (0-3) saat homografi
 tidak bisa diestimasi. Dijamin oleh tes kesetaraan array-vs-berkas.
+
+## 9. Penghambat sudah pindah (11 Agu 2026)
+
+Pada k = 84 tiap query dibandingkan dengan SELURUH galeri sisinya, jadi
+langit-langitnya 100% (recall@84). Hasilnya 75,60%.
+
+Artinya 24,4% query gagal BUKAN karena jawaban benarnya tidak ikut terambil —
+ia selalu ikut. Gagalnya karena XFeat menaruh foto yang SALAH di atas yang
+benar. Menaikkan k lagi mustahil; memperbaiki stage-1 mustahil.
+
+Sembilan teknik diuji, tidak ada yang menang:
+
+| Metode                        | dRank-1 | Putusan                     |
+|---|---|---|
+| alpha query expansion         |  +0,60  | tidak signifikan            |
+| database-side augmentation    |  -0,60  | tidak signifikan            |
+| CSLS koreksi hubness          |  +1,79  | tidak signifikan            |
+| PCA-whitening (dari galeri)   |  +0,60  | tidak signifikan            |
+| k-reciprocal re-ranking       |  -7,14  | SIGNIFIKAN LEBIH BURUK      |
+| skor inlier/keypoint          |  -0,60  | seri                        |
+| skor inlier/pasangan mentah   |  -6,55  | lebih buruk                 |
+| resize 640                    |  -1,79  | dataran                     |
+| resize 768                    |   0,00  | dataran                     |
+
+Satu sebab untuk lima yang pertama: tiap individu hanya punya SATU foto
+galeri per sisi (84 individu x 2 sisi = 168 foto, satu-satu). Semua metode itu
+berdiri di atas asumsi "tetangga terdekat sebuah foto galeri biasanya
+identitas yang sama". Di sini asumsi itu tidak pernah benar — tetangga
+terdekat sebuah foto galeri SELALU individu yang berbeda.
+
+Sapu ukuran lengkap (XFeat murni, k=20):
+  256 -> 47,02 | 320 -> 54,17 | 368 -> 54,76 | 448 -> 60,12
+  512 -> 62,50 | 640 -> 60,71 | 768 -> 62,50
+
+Mendatar di 448-512, bukan naik terus. Penting: kondisi "tanpa resize" tidak
+berarti resolusi kecil — foto asli dipotong ke sisi 800 px, LEBIH BESAR dari
+512. Jadi yang menolong adalah SKALA SERAGAM antar foto, bukan jumlah piksel.
+
+## 10. Dataset ketiga: ZindiTurtleRecall (11 Agu 2026)
+
+2.145 foto / 100 individu berlabel sisi, plus 10.658 foto / 2.231 individu.
+
+Dua hal yang harus disebut sebelum dipakai:
+
+1. TIDAK ADA TANGGAL sama sekali. Protokol §3 mengharuskan galeri = tahun
+   pertama, query = tahun kedua. Tanpa tanggal, split itu tidak bisa dibuat.
+   Membaginya acak akan menaruh foto dari sesi pemotretan yang SAMA di galeri
+   dan query sekaligus — angkanya melonjak dan tidak berarti apa-apa.
+2. `image_location` punya TIGA nilai (left / right / top), bukan dua. Dan
+   penulisannya tidak konsisten ("Right" vs "right").
+
+Fotonya sudah berupa close-up kepala, jadi YOLO tidak diperlukan untuk
+dataset ini.

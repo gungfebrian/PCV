@@ -33,14 +33,12 @@ def state_uji():
         # Sengaja mencerminkan daftar kondisi yang SEBENARNYA dipakai (11),
         # bukan versi pendek. Tes tata letak yang memakai daftar lebih pendek
         # dari kenyataan tidak akan pernah menangkap masalah overflow.
-        "kondisi_pilihan": [("raw", "Raw (baseline)"), ("crop", "Crop kepala"),
+        "kondisi_pilihan": [("raw", "Raw"), ("crop", "Crop kepala"),
                             ("wb", "White balance"), ("clahe", "CLAHE"),
                             ("gray", "Grayscale"), ("crop_wb", "Crop + WB"),
-                            ("resize368", "Resize seragam 368x368"),
-                            ("resize256", "Resize seragam 256x256"),
-                            ("resize320", "Resize seragam 320x320"),
-                            ("resize448", "Resize seragam 448x448"),
-                            ("resize512", "Resize seragam 512x512")],
+                            ("resize368", "368 px"), ("resize256", "256 px"),
+                            ("resize320", "320 px"), ("resize448", "448 px"),
+                            ("resize512", "512 px")],
         "matcher": "xfeat",
         "matcher_pilihan": [("sift", "SIFT"), ("xfeat", "XFEAT")],
         "sumber": "dataset",
@@ -48,6 +46,12 @@ def state_uji():
                            ("dataset", "jelajah dataset")],
         "info_query": "8/168  Calvin 2021",
         "geser": 0,
+        "catatan_kepala": "",
+        "dataset": "zakynthos",
+        "dataset_pilihan": [("reunion", "reunion"), ("zakynthos", "zakynthos"),
+                            ("seaturtleheads", "seaturtleheads")],
+        "stage1": "raw",
+        "stage1_pilihan": [("raw", "Raw"), ("kepala_gt", "Kepala anotasi")],
         "rerank": "rrf",
         "rerank_pilihan": [("off", "mati (stage-1 saja)"),
                            ("murni", "murni — skor inlier"),
@@ -144,12 +148,159 @@ def _():
     bisa_diklik = [b for b in baris if b[2] is not None]
     assert len(geo) == len(bisa_diklik), \
         f"{len(geo)} area klik vs {len(bisa_diklik)} baris — tidak sinkron"
-    for i, y0, y1 in geo:
-        tengah = (y0 + y1) // 2
-        got = T.klik_sidebar(st, 100, tengah, 760)
+    for i, x0, y0, x1, y1 in geo:
+        cx, cy = (x0 + x1) // 2, (y0 + y1) // 2
+        got = T.klik_sidebar(st, cx, cy, 760)
         assert got == baris[i][2], \
-            f"klik di y={tengah} -> {got}, harusnya {baris[i][2]}"
+            f"klik di ({cx},{cy}) -> {got}, harusnya {baris[i][2]}"
     return f"{len(geo)} area klik semuanya cocok dengan yang tergambar"
+
+
+@uji("klik: kolom kiri dan kolom kanan memberi aksi yang BERBEDA")
+def _():
+    """Sejak sidebar dua kolom, hit-test yang hanya memeriksa y akan selalu
+    mengembalikan tombol kolom kiri — termasuk saat yang diklik kolom kanan.
+    Tidak ada error yang muncul; tombolnya cuma menekan hal yang salah."""
+    st = state_uji()
+    baris = T.bangun_baris_sidebar(st)
+    geo = T.geometri_sidebar(baris, 760)
+    per_y = {}
+    for i, x0, y0, x1, y1 in geo:
+        per_y.setdefault(y0, []).append((i, x0, x1))
+    pasangan = [v for v in per_y.values() if len(v) == 2]
+    assert pasangan, "tidak ada baris dua kolom — tes ini tidak bermakna"
+    for (ia, xa0, xa1), (ib, xb0, xb1) in pasangan:
+        y = [k for k, v in per_y.items() if v[0][0] == ia][0] + 10
+        kiri = T.klik_sidebar(st, (xa0 + xa1) // 2, y, 760)
+        kanan = T.klik_sidebar(st, (xb0 + xb1) // 2, y, 760)
+        assert kiri == baris[ia][2], f"kolom kiri -> {kiri}"
+        assert kanan == baris[ib][2], f"kolom kanan -> {kanan}"
+        assert kiri != kanan, "dua kolom memberi aksi yang sama"
+    return f"{len(pasangan)} pasang kolom, kiri dan kanan terpisah benar"
+
+
+@uji("match: garis inlier mendarat DI DALAM panel, bukan di luar layar")
+def _():
+    """Bug yang terlihat di layar: garis inlier keluar dari bawah panel.
+
+    Sebabnya koordinat pasangan hidup di ruang gambar PRAPROSES (512x512),
+    tapi panel diberi frame ASLI, sehingga garisnya diskalakan dengan faktor
+    gambar asli. Tidak ada error - hanya garis yang mendarat entah di mana.
+
+    Tes ini memeriksa hasil AKHIR yang tergambar: piksel hijau garis harus
+    berada di dalam kanvas, dan ujung-ujungnya harus jatuh di dalam kedua
+    belahan panel.
+    """
+    import numpy as np
+    L, T_ = 800, 400
+    pra = np.full((512, 512, 3), 90, np.uint8)     # query praproses
+    kand = np.full((512, 512, 3), 120, np.uint8)   # kandidat praproses
+    # pasangan tersebar di seluruh gambar 512x512
+    ps = [((float(x), float(y)), (float(511 - x), float(y)))
+          for x in (10, 250, 500) for y in (10, 250, 500)]
+    kanvas = T.panel_match(pra, kand, ps, L, T_)
+
+    hijau = ((kanvas[:, :, 1] > 150) & (kanvas[:, :, 0] < 120)
+             & (kanvas[:, :, 2] < 120))
+    assert hijau.any(), "tidak ada garis yang tergambar sama sekali"
+
+    # semua titik pasangan harus jatuh di dalam panel
+    sep = L // 2
+    _, sa, oxa, oya = T.muat_pas(pra, sep - 2, T_)
+    _, sb, oxb, oyb = T.muat_pas(kand, L - sep - 2, T_)
+    for (x1, y1), (x2, y2) in ps:
+        px, py = x1 * sa + oxa, y1 * sa + oya
+        assert 0 <= px < sep - 2 and 0 <= py < T_, \
+            f"titik query ({px:.0f},{py:.0f}) di luar belahan kiri"
+        qx, qy = x2 * sb + oxb + sep + 2, y2 * sb + oyb
+        assert sep <= qx < L and 0 <= qy < T_, \
+            f"titik kandidat ({qx:.0f},{qy:.0f}) di luar belahan kanan"
+
+    # dan MEMBUKTIKAN bug lama akan tertangkap: beri frame asli yang jauh
+    # lebih besar, koordinat 512 akan mengecil ke pojok kiri-atas
+    besar = np.full((1600, 2000, 3), 90, np.uint8)
+    _, sc, oxc, oyc = T.muat_pas(besar, sep - 2, T_)
+    jauh = [1 for (x1, y1), _ in ps
+            if not (abs(x1 * sc + oxc - (x1 * sa + oxa)) < 4
+                    and abs(y1 * sc + oyc - (y1 * sa + oya)) < 4)]
+    assert jauh, "memakai frame asli ternyata tidak menggeser titik - " \
+                 "tes ini tidak akan menangkap bug lamanya"
+    return f"{len(ps)} pasangan semuanya di dalam panel"
+
+
+@uji("sidebar: tidak ada dua tombol yang terbaca sama setelah dipotong")
+def _():
+    """Kolom sempit memotong label. Kalau dua tombol berbeda terpotong menjadi
+    teks yang sama persis, tombolnya tetap bekerja tapi pengguna tidak punya
+    cara membedakannya — dan tidak ada error yang muncul.
+
+    Ini benar-benar terjadi: kelima kondisi resize semuanya menjadi
+    "Resize seragam ." di sidebar dua kolom."""
+    st = state_uji()
+    baris = T.bangun_baris_sidebar(st)
+    geo = {i: (x0, x1) for i, x0, y0, x1, y1 in T.geometri_sidebar(baris, 880)}
+    # Diperiksa PER SEKSI, bukan global: "Raw" boleh muncul di bawah
+    # STAGE 1 dan STAGE 2 sekaligus karena judul seksinya membedakan.
+    # Yang berbahaya adalah dua tombol identik di dalam SATU seksi.
+    terlihat, n = {}, 0
+    for i, (jenis, label, kunci, _) in enumerate(baris):
+        if jenis == "judul":
+            terlihat = {}
+            continue
+        if i not in geo:
+            continue
+        s = T.potong_label(label, geo[i][1] - geo[i][0])
+        if not s.strip():
+            continue
+        assert s not in terlihat, (
+            f"dua tombol sama-sama terbaca {s!r} di seksi yang sama: "
+            f"{baris[terlihat[s]][1]!r} dan {label!r}")
+        terlihat[s] = i
+        n += 1
+
+    # dan label asli protokol memang tidak muat — buktikan pemendekannya perlu
+    lebar_kolom = T.KOLOM["opsi2a"][1] - T.KOLOM["opsi2a"][0]
+    panjang = [T.potong_label(f"Resize seragam {n}x{n}", lebar_kolom)
+               for n in (256, 512)]
+    assert panjang[0] == panjang[1], \
+        "label panjang ternyata muat — komentar di LABEL_PENDEK sudah usang"
+    return f"{n} tombol, tidak ada yang bentrok dalam satu seksi"
+
+
+@uji("sidebar: MUAT di layar ukuran normal, tidak perlu di-scroll sama sekali")
+def _():
+    """Keluhan aslinya "sidebar tidak bisa di-scroll". Perbaikan yang benar
+    bukan membuat scroll-nya bekerja, tapi membuat scroll tidak diperlukan:
+    11 kondisi + matcher + mode dijadikan dua kolom. Scroll tetap ada sebagai
+    jaring pengaman untuk jendela kecil."""
+    baris = T.bangun_baris_sidebar(state_uji())
+    tinggi = T.tinggi_sidebar(baris)
+    assert T.batas_geser(baris, 880) == 0, \
+        f"isi sidebar {tinggi}px masih melebihi layar 880px"
+    assert T.batas_geser(baris, 760) == 0, \
+        f"isi sidebar {tinggi}px melebihi layar 760px"
+    return f"isi {tinggi}px, muat di 760 dan 880 tanpa scroll"
+
+
+@uji("sidebar: tombol panah bisa diklik dan mengembalikan aksi geser")
+def _():
+    """Roda mouse tidak bisa diandalkan — backend Cocoa OpenCV di macOS tidak
+    pernah mengirim EVENT_MOUSEWHEEL. Tanpa tombol yang bisa diklik, sidebar
+    yang lebih panjang dari layar benar-benar tidak bisa dijangkau.
+
+    Diuji di kanvas pendek (480px) supaya luapannya pasti terjadi, bukan di
+    ukuran normal yang justru sudah muat."""
+    H = 480
+    st = state_uji()
+    baris = T.bangun_baris_sidebar(st)
+    assert T.batas_geser(baris, H) > 0, "kanvas uji terlalu tinggi"
+    for nama, (bx, by, bw, bh) in T.tombol_geser(H).items():
+        got = T.klik_sidebar(st, bx + bw // 2, by + bh // 2, H)
+        assert got is not None and got[0] == "geser", \
+            f"tombol {nama} -> {got}, harusnya aksi geser"
+        assert got[1] == (-1 if nama == "naik" else 1), \
+            f"tombol {nama} arahnya terbalik: {got}"
+    return "tombol naik dan turun keduanya terbaca"
 
 
 @uji("klik: di luar sidebar dan di celah antar baris mengembalikan None")
@@ -411,27 +562,32 @@ def _():
     isinya melebihi tinggi layar. Yang paling berbahaya bukan isinya terpotong,
     tapi kalau geseran hanya diterapkan saat MENGGAMBAR dan tidak saat
     hit-test klik — tombol akan menekan hal yang salah tanpa error apa pun."""
+    H = 480                     # sengaja pendek supaya pasti meluap
     st = state_uji()
     baris = T.bangun_baris_sidebar(st)
-    maks = T.batas_geser(baris, 880)
+    maks = T.batas_geser(baris, H)
     assert maks > 0, "isi sidebar tidak melebihi layar, tes ini tidak bermakna"
 
     for geser in (0, 60, maks):
         st["geser"] = geser
-        geo = T.geometri_sidebar(baris, 880, geser)
-        for i, y0, y1 in geo:
-            tengah = (y0 + y1) // 2
-            if tengah < 44 or tengah > 880:      # tergulung keluar layar
+        geo = T.geometri_sidebar(baris, H, geser)
+        tb = T.tombol_geser(H)
+        for i, x0, y0, x1, y1 in geo:
+            cx, cy = (x0 + x1) // 2, (y0 + y1) // 2
+            if cy < 44 or cy > H:                # tergulung keluar layar
                 continue
-            got = T.klik_sidebar(st, 100, tengah, 880)
+            if any(bx <= cx <= bx + bw and by <= cy <= by + bh
+                   for bx, by, bw, bh in tb.values()):
+                continue                          # tertutup tombol panah
+            got = T.klik_sidebar(st, cx, cy, H)
             assert got == baris[i][2], \
-                f"geser={geser}: klik y={tengah} -> {got}, harusnya {baris[i][2]}"
+                f"geser={geser}: klik ({cx},{cy}) -> {got}, harusnya {baris[i][2]}"
 
     # menggulung harus benar-benar mengubah tampilan
     a = T.susun(frame_uji(), state_uji() | {"geser": 0}, telemetry_uji(),
-                None, [], 1500, 880)
+                None, [], 1500, H)
     b = T.susun(frame_uji(), state_uji() | {"geser": maks}, telemetry_uji(),
-                None, [], 1500, 880)
+                None, [], 1500, H)
     assert (a[:, :T.LEBAR_SIDEBAR] != b[:, :T.LEBAR_SIDEBAR]).any(), \
         "sidebar tidak berubah saat digulung"
     return f"batas geser {maks}px, area klik cocok di 3 posisi"

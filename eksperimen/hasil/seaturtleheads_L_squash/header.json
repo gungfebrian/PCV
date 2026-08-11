@@ -1,0 +1,29 @@
+{
+  "dataset": "SeaTurtleIDHeads",
+  "dataset_hash": "39a1c6603055f5d8",
+  "model": "BVRA/MegaDescriptor-L-384",
+  "model_arch": "swin_large_patch4_window12_384",
+  "model_snapshot": "33b3c6f4ee0c386a4126cc3dcd23843920613fa1",
+  "input_size": 384,
+  "crop_pct": 0.9,
+  "torch": "2.13.0",
+  "timm": "1.0.28",
+  "numpy": "2.5.1",
+  "sanity": {
+    "n_gallery": 2134,
+    "n_query": 1246,
+    "n_identitas_gallery": 380,
+    "n_identitas_query": 150,
+    "query_tanpa_pasangan_sisi_sama": 0,
+    "query_yang_tahunnya_tidak_lebih_baru": 0,
+    "gallery_per_sisi": {
+      "left": 1090,
+      "right": 1044
+    },
+    "query_per_sisi": {
+      "left": 703,
+      "right": 543
+    },
+    "query_per_spesies": {}
+  }
+}

@@ -59,7 +59,10 @@ def main():
     sisi = np.array([r["side"] for r in qry])
 
     H = {}
-    for k in P.KONDISI:
+    # KONDISI_BERKAS (crop kepala) ikut diuji. Sebelumnya dilewati karena
+    # loop-nya hanya melihat P.KONDISI, sehingga temuan terbesar proyek ini
+    # justru tidak pernah masuk tabel statistik resmi.
+    for k in list(P.KONDISI) + list(P.KONDISI_BERKAS):
         try:
             H[k] = evaluasi(k, gal, qry)
         except (FileNotFoundError, RuntimeError) as e:
@@ -69,7 +72,7 @@ def main():
     tabel = {}
     for k, h in H.items():
         baris = {
-            "label": P.LABEL[k],
+            "label": P.LABEL.get(k, k),
             "rank1": float(h["rank1"].mean() * 100),
             "rank5": float(h["rank5"].mean() * 100),
             "mAP": float(h["ap"].mean() * 100),

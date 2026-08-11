@@ -95,75 +95,182 @@ def bangun_baris_sidebar(state):
     """Satu sumber kebenaran untuk yang digambar DAN yang bisa diklik.
     Kalau dipisah, area klik dan area terlihat pasti bergeser cepat atau
     lambat, dan tombol akan menekan hal yang salah tanpa error."""
-    b = [("judul", "SUMBER", None, False)]
+    b = [("judul", "DATASET", None, False)]
+    for k, label in state.get("dataset_pilihan", []):
+        b.append(("opsi2", label, ("dataset", k), state.get("dataset") == k))
+
+    b.append(("judul", "SUMBER", None, False))
     for k, label in state.get("sumber_pilihan", []):
-        b.append(("opsi", label, ("sumber", k), state.get("sumber") == k))
+        b.append(("opsi2", label, ("sumber", k), state.get("sumber") == k))
     if state.get("sumber") == "dataset":
-        b.append(("opsi", "[<] sebelumnya   [>] berikutnya",
+        b.append(("opsi", f"[<] [>] {state.get('info_query', '')}",
                   ("nav", "next"), False))
-        b.append(("opsi", state.get("info_query", ""), None, False))
 
-    b.append(("judul", "PREPROCESSING", None, False))
+    # Dua kolom untuk daftar yang panjang. Dengan 11 kondisi preprocessing,
+    # satu baris per kondisi membuat sidebar jauh melebihi layar sehingga
+    # SEMUANYA harus di-scroll. Dua kolom memangkasnya jadi 6 baris dan
+    # membuat scroll nyaris tidak diperlukan lagi.
+    # Status crop kepala ditampilkan SEBAGAI BARIS SENDIRI, bukan sekadar
+    # salah satu opsi preprocessing. Di Zakynthos crop kepala menaikkan
+    # Rank-1 dari 12,50% ke 63,75% — selisih terbesar dari seluruh eksperimen.
+    # Kalau mode ini mati tanpa disadari, angkanya runtuh tanpa pesan apa pun.
+    # STAGE 1 dan STAGE 2 dipilih TERPISAH. Eksperimen membuktikan crop
+    # kepala menolong keduanya sendiri-sendiri: di Zakynthos stage-1 saja
+    # naik 8,75% -> 63,75%. Kalau keduanya dipaksa sama, konfigurasi
+    # terbaik tidak bisa dicoba dari UI.
+    # STAGE 0 punya seksi SENDIRI karena crop kepala terbukti menolong
+    # KEDUA stage, bukan cuma stage-2: di Zakynthos stage-1 saja naik
+    # 8,75% -> 63,75%. Menaruhnya di dalam STAGE 2 menyesatkan.
+    kep = (state["kondisi"] in ("kepala", "kepala_gt")
+           or state.get("stage1") in ("kepala", "kepala_gt"))
+    b.append(("judul", "STAGE 0 - DETEKSI KEPALA", None, False))
+    b.append(("opsi", ("[v] AKTIF - crop kepala" if kep
+                       else "[ ] MATI - frame penuh"
+                            + (f" ({state['catatan_kepala']})"
+                               if state.get("catatan_kepala") else "")),
+              ("toggle_kepala", None), kep))
+
+    b.append(("judul", "STAGE 1 - CARI KANDIDAT", None, False))
+    for k, label in state.get("stage1_pilihan", []):
+        b.append(("opsi2", label, ("stage1", k), state.get("stage1") == k))
+
+    b.append(("judul", "STAGE 2 - PERIKSA TELITI", None, False))
     for k, label in state["kondisi_pilihan"]:
-        b.append(("opsi", label, ("kondisi", k), state["kondisi"] == k))
+        b.append(("opsi2", label, ("kondisi", k), state["kondisi"] == k))
 
-    b.append(("judul", "STAGE 2 — MATCHER", None, False))
+    b.append(("judul", "STAGE 2 — MATCHER & MODE", None, False))
     for k, label in state.get("matcher_pilihan", []):
-        b.append(("opsi", label, ("matcher", k), state.get("matcher") == k))
-
-    b.append(("judul", "STAGE 2 — MODE", None, False))
+        b.append(("opsi2", label, ("matcher", k), state.get("matcher") == k))
     for k, label in state["rerank_pilihan"]:
-        b.append(("opsi", label, ("rerank", k), state["rerank"] == k))
+        b.append(("opsi2", label, ("rerank", k), state["rerank"] == k))
 
-    b.append(("judul", "SISI QUERY", None, False))
+    b.append(("judul", "SISI QUERY & OVERLAY", None, False))
     for k in ("left", "right"):
-        b.append(("opsi", k, ("sisi", k), state["sisi"] == k))
-
-    b.append(("judul", "OVERLAY", None, False))
-    b.append(("opsi", "bounding box", ("toggle", "bbox"), state["bbox"]))
-    b.append(("opsi", "keypoint SIFT", ("toggle", "keypoint"), state["keypoint"]))
-    b.append(("opsi", "garis inlier", ("toggle", "match"), state["match"]))
-
-    b.append(("judul", f"AMBANG  {state['ambang']:.2f}", None, False))
-    b.append(("opsi", "[-] turun    [+] naik", ("ambang", None), False))
+        b.append(("opsi2", k, ("sisi", k), state["sisi"] == k))
+    b.append(("opsi2", "bbox", ("toggle", "bbox"), state["bbox"]))
+    b.append(("opsi2", "keypoint", ("toggle", "keypoint"), state["keypoint"]))
+    b.append(("opsi2", "garis inlier", ("toggle", "match"), state["match"]))
+    b.append(("opsi2", f"ambang {state['ambang']:.2f}", ("ambang", None), False))
 
     b.append(("judul", "AKSI", None, False))
-    b.append(("opsi", "[SPASI] jeda / lanjut", ("aksi", "jeda"), state["jeda"]))
-    b.append(("opsi", "[S] simpan tangkapan", ("aksi", "simpan"), False))
+    b.append(("opsi2", "[SPASI] jeda", ("aksi", "jeda"), state["jeda"]))
+    b.append(("opsi2", "[S] simpan", ("aksi", "simpan"), False))
     b.append(("opsi", "[Q] keluar", ("aksi", "keluar"), False))
     return b
 
 
+# Geometri kolom. Satu tempat, dipakai menggambar DAN hit-test.
+_X0, _X1 = 8, LEBAR_SIDEBAR - 8
+_XTENGAH = (_X0 + _X1) // 2
+KOLOM = {"opsi": (_X0, _X1),
+         "opsi2a": (_X0, _XTENGAH - 2),
+         "opsi2b": (_XTENGAH + 2, _X1)}
+TINGGI_BARIS = 23
+TINGGI_JUDUL = 28
+Y_AWAL = 52
+TINGGI_KEPALA = 44
+
+
+def _tata_letak(baris, geser=0):
+    """(indeks, x0, y0, x1, y1) tiap baris yang bisa diklik, termasuk geseran.
+
+    SATU fungsi untuk menggambar DAN hit-test. Kalau keduanya menghitung
+    sendiri-sendiri, tombol akan menekan hal yang salah begitu sidebar
+    di-scroll atau tata letaknya berubah — dan tidak ada error yang muncul.
+
+    Baris "opsi2" mengisi setengah lebar dan berpasangan: yang pertama di
+    kolom kiri, berikutnya di kolom kanan, baru turun satu baris.
+    """
+    y = Y_AWAL - geser
+    keluar = []
+    kolom_kanan = False
+    for i, (jenis, _, kunci, _) in enumerate(baris):
+        if jenis == "judul":
+            if kolom_kanan:                 # tutup pasangan yang menggantung
+                y += TINGGI_BARIS
+                kolom_kanan = False
+            y += TINGGI_JUDUL
+            continue
+        if jenis == "opsi2":
+            x0, x1 = KOLOM["opsi2b" if kolom_kanan else "opsi2a"]
+            if kunci:
+                keluar.append((i, x0, y, x1, y + 21))
+            if kolom_kanan:
+                y += TINGGI_BARIS
+            kolom_kanan = not kolom_kanan
+            continue
+        if kolom_kanan:                     # "opsi" lebar penuh memaksa turun
+            y += TINGGI_BARIS
+            kolom_kanan = False
+        x0, x1 = KOLOM["opsi"]
+        if kunci:
+            keluar.append((i, x0, y, x1, y + 21))
+        y += TINGGI_BARIS
+    return keluar, y + (TINGGI_BARIS if kolom_kanan else 0)
+
+
 def tinggi_sidebar(baris):
-    """Tinggi total isi sidebar. Dipakai untuk membatasi scroll supaya tidak
-    bisa digeser melewati ujung isinya."""
-    y = 52
-    for jenis, _, _, _ in baris:
-        y += 28 if jenis == "judul" else 23
-    return y + 12
+    """Tinggi total isi sidebar, untuk membatasi scroll."""
+    return _tata_letak(baris, 0)[1] + 12
 
 
 def geometri_sidebar(baris, tinggi=None, geser=0):
-    """(indeks, y0, y1) tiap baris yang bisa diklik, SUDAH termasuk geseran.
-
-    Satu fungsi ini dipakai untuk menggambar DAN untuk hit-test klik. Kalau
-    geserannya hanya diterapkan di salah satu, tombol akan menekan hal yang
-    salah begitu sidebar di-scroll — dan tidak ada error yang muncul.
-    """
-    y = 52 - geser
-    keluar = []
-    for i, (jenis, _, kunci, _) in enumerate(baris):
-        if jenis == "judul":
-            y += 28
-            continue
-        if kunci:
-            keluar.append((i, y, y + 21))
-        y += 23
-    return keluar
+    return _tata_letak(baris, geser)[0]
 
 
 def batas_geser(baris, tinggi_kanvas):
     return max(0, tinggi_sidebar(baris) - tinggi_kanvas + 8)
+
+
+def tombol_geser(tinggi):
+    """Dua tombol panah yang MENEMPEL di layar, tidak ikut tergeser.
+
+    Ini ada karena roda mouse tidak bisa diandalkan: backend Cocoa OpenCV di
+    macOS tidak pernah mengirim EVENT_MOUSEWHEEL sama sekali, jadi sidebar
+    terasa "tidak bisa di-scroll" walau logikanya benar. Tombol yang bisa
+    diklik selalu bekerja di semua backend.
+    """
+    s = 22
+    x = LEBAR_SIDEBAR - s - 6
+    return {"naik": (x, TINGGI_KEPALA - s - 4, s, s),
+            "turun": (x, tinggi - s - 6, s, s)}
+
+
+def potong_label(label, lebar):
+    """Potong label agar muat di kolom selebar `lebar` px.
+
+    Hershey SIMPLEX pada skala 0,39 kira-kira 6,4 px per karakter. Dipisah
+    jadi fungsi sendiri supaya tes bisa memeriksa hasil AKHIR yang terbaca
+    pengguna, bukan label sebelum dipotong: "Resize seragam 512x512" dan
+    "Resize seragam 368x368" sama-sama menjadi "Resize seragam ." di kolom
+    sempit — tombolnya tetap berfungsi, tapi tidak ada cara membedakannya.
+    """
+    maks = max(4, int((lebar - 18) / 6.4))
+    return label if len(label) <= maks else label[:maks - 1] + "."
+
+
+def _judul_y(baris, geser):
+    """Posisi tiap judul, dihitung dengan aturan tata letak yang sama."""
+    y = Y_AWAL - geser
+    keluar = {}
+    kolom_kanan = False
+    for i, (jenis, _, _, _) in enumerate(baris):
+        if jenis == "judul":
+            if kolom_kanan:
+                y += TINGGI_BARIS
+                kolom_kanan = False
+            keluar[i] = y
+            y += TINGGI_JUDUL
+        elif jenis == "opsi2":
+            if kolom_kanan:
+                y += TINGGI_BARIS
+            kolom_kanan = not kolom_kanan
+        else:
+            if kolom_kanan:
+                y += TINGGI_BARIS
+                kolom_kanan = False
+            y += TINGGI_BARIS
+    return keluar
 
 
 def gambar_sidebar(kanvas, state):
@@ -174,48 +281,77 @@ def gambar_sidebar(kanvas, state):
     maks = batas_geser(baris, h)
     geser = int(np.clip(state.get("geser", 0), 0, maks))
     state["geser"] = geser
-    geo = {i: (a, b) for i, a, b in geometri_sidebar(baris, h, geser)}
-    y = 52 - geser
+    geo = {i: (x0, y0, x1) for i, x0, y0, x1, _ in
+           geometri_sidebar(baris, h, geser)}
+    y_judul = _judul_y(baris, geser)
+
     for i, (jenis, label, kunci, aktif) in enumerate(baris):
         if jenis == "judul":
-            cv2.line(kanvas, (12, y + 3), (LEBAR_SIDEBAR - 12, y + 3),
-                     (70, 65, 60), 1)
-            judul(kanvas, label, (14, y + 20), 0.36, KUNING)
-            y += 28
+            y = y_judul[i]
+            if TINGGI_KEPALA <= y <= h - 10:
+                cv2.line(kanvas, (12, y + 3), (LEBAR_SIDEBAR - 12, y + 3),
+                         (70, 65, 60), 1)
+                judul(kanvas, label, (14, y + 20), 0.36, KUNING)
             continue
-        y0 = geo.get(i, (y, y + 21))[0]
-        if y0 < 44 or y0 > h - 8:        # di luar layar, lewati
-            y += 23
+        if i not in geo:                          # baris info tanpa aksi
             continue
+        x0, y0, x1 = geo[i]
+        if y0 < TINGGI_KEPALA or y0 > h - 26:     # di luar layar
+            continue
+        lebar = x1 - x0
         if aktif:
-            kotak(kanvas, 8, y0, LEBAR_SIDEBAR - 16, 21, AKTIF)
-            kotak(kanvas, 8, y0, 3, 21, KUNING)
-        teks(kanvas, label, (18, y0 + 15), 0.41,
+            kotak(kanvas, x0, y0, lebar, 21, AKTIF)
+            kotak(kanvas, x0, y0, 3, 21, KUNING)
+        teks(kanvas, potong_label(label, lebar), (x0 + 9, y0 + 15), 0.39,
              TEKS if aktif else REDUP, 2 if aktif else 1)
-        y += 23
 
     # kepala menimpa isi yang tergeser, supaya judul selalu terbaca
-    kotak(kanvas, 0, 0, LEBAR_SIDEBAR, 44, PANEL)
+    kotak(kanvas, 0, 0, LEBAR_SIDEBAR, TINGGI_KEPALA, PANEL)
     judul(kanvas, "RE-ID PENYU", (14, 26), 0.6)
     teks(kanvas, "engineer tool", (14, 40), 0.34, REDUP)
 
-    if maks > 0:                          # batang scroll
+    if maks > 0:
+        tb = tombol_geser(h)
+        for nama, (bx, by, bw, bh) in tb.items():
+            bisa = geser > 0 if nama == "naik" else geser < maks
+            kotak(kanvas, bx, by, bw, bh, PANEL2 if bisa else PANEL)
+            kotak(kanvas, bx, by, bw, bh, (80, 76, 70), isi=False)
+            cx, cy = bx + bw // 2, by + bh // 2
+            arah = -1 if nama == "naik" else 1
+            titik = np.array([[cx - 5, cy + 3 * arah], [cx + 5, cy + 3 * arah],
+                              [cx, cy - 4 * arah]], np.int32)
+            cv2.fillConvexPoly(kanvas, titik, KUNING if bisa else (90, 86, 80))
+        # batang posisi
         tinggi_bar = max(30, int(h * h / (h + maks)))
-        y_bar = 44 + int((h - 44 - tinggi_bar) * geser / maks)
-        kotak(kanvas, LEBAR_SIDEBAR - 5, 44, 3, h - 44, (60, 56, 52))
-        kotak(kanvas, LEBAR_SIDEBAR - 5, y_bar, 3, tinggi_bar, KUNING)
-        teks(kanvas, "scroll: roda / PgUp PgDn", (14, h - 6), 0.32, REDUP)
+        y_bar = TINGGI_KEPALA + int((h - TINGGI_KEPALA - tinggi_bar)
+                                    * geser / maks)
+        kotak(kanvas, LEBAR_SIDEBAR - 4, TINGGI_KEPALA, 2,
+              h - TINGGI_KEPALA, (60, 56, 52))
+        kotak(kanvas, LEBAR_SIDEBAR - 4, y_bar, 2, tinggi_bar, KUNING)
+        teks(kanvas, "geser: klik panah / n p", (12, h - 8), 0.32, REDUP)
     return kanvas
 
 
 def klik_sidebar(state, x, y, tinggi=None):
+    """Kembalikan aksi baris yang diklik, atau ('geser', +/-1) untuk panah.
+
+    Hit-test memakai x DAN y. Sejak sidebar punya dua kolom, memeriksa y saja
+    akan mengembalikan tombol kolom kiri untuk klik di kolom kanan.
+    """
     if x >= LEBAR_SIDEBAR:
         return None
-    if y < 44:                            # area judul, bukan tombol
-        return None
     baris = bangun_baris_sidebar(state)
-    for i, y0, y1 in geometri_sidebar(baris, tinggi, state.get("geser", 0)):
-        if y0 <= y <= y1:
+    if tinggi:
+        maks = batas_geser(baris, tinggi)
+        if maks > 0:
+            for nama, (bx, by, bw, bh) in tombol_geser(tinggi).items():
+                if bx <= x <= bx + bw and by <= y <= by + bh:
+                    return ("geser", -1 if nama == "naik" else 1)
+    if y < TINGGI_KEPALA:                 # area judul, bukan tombol
+        return None
+    for i, x0, y0, x1, y1 in geometri_sidebar(baris, tinggi,
+                                              state.get("geser", 0)):
+        if x0 <= x <= x1 and y0 <= y <= y1:
             return baris[i][2]
     return None
 
@@ -304,6 +440,12 @@ def panel_match(qim, gim, pasangan, lebar, tinggi):
     Ini panel paling informatif di seluruh alat: kalau garis mendarat di
     karang alih-alih di sisik, penyebab kegagalannya terlihat langsung tanpa
     perlu membaca angka apa pun.
+
+    PENTING: `qim` dan `gim` HARUS gambar yang benar-benar dilihat matcher,
+    yaitu SETELAH preprocessing. Koordinat di `pasangan` hidup di ruang itu.
+    Sebelumnya panel ini diberi frame asli, sehingga garisnya diskalakan
+    dengan faktor gambar asli padahal titiknya dalam ruang 512x512 — garis
+    berakhir jauh di luar panel dan tidak ada error apa pun yang muncul.
     """
     kanvas = np.full((tinggi, lebar, 3), PANEL, np.uint8)
     sep = lebar // 2
@@ -396,7 +538,13 @@ def gambar_panel(kanvas, x0, tinggi, t, hasil, ambang, ringkas):
                       (x0 + LEBAR_PANEL - 12, y + 62), HIJAU, 1)
         judul(kanvas, f"Rank-1 {terbaik['rank1']:.2f}%", (x0 + 20, y + 20),
               0.5, HIJAU)
-        teks(kanvas, f"Rank-5 {terbaik['rank5']:.2f}%  mAP {terbaik['mAP']:.2f}%",
+        # `.get` bukan `[...]`: berkas hasil lama tidak selalu punya rank5/mAP,
+        # dan panel yang melempar KeyError akan mematikan seluruh aplikasi
+        # hanya karena satu angka pelengkap tidak ada.
+        def _a(k):
+            v = terbaik.get(k)
+            return f"{v:.2f}%" if isinstance(v, (int, float)) else "-"
+        teks(kanvas, f"Rank-5 {_a('rank5')}  mAP {_a('mAP')}",
              (x0 + 20, y + 36), 0.36, TEKS)
         teks(kanvas, terbaik["label"][:38], (x0 + 20, y + 52), 0.33, REDUP)
         y += 74
@@ -407,16 +555,53 @@ def gambar_panel(kanvas, x0, tinggi, t, hasil, ambang, ringkas):
             teks(kanvas, "^ BUKAN yang sedang dipakai", (x0 + 14, y), 0.33, BIRU)
         y += 18
 
-    y += 8
+    y += 10
+    papan = t.get("papan") or []
+    if papan:
+        judul(kanvas, "PAPAN SKOR KONDISI", (x0 + 12, y), 0.4, KUNING)
+        y += 6
+        teks(kanvas, f"Rank-1, {t.get('papan_ket', '')}", (x0 + 12, y + 10),
+             0.31, REDUP)
+        y += 20
+        # Batang relatif terhadap yang terbaik supaya urutannya langsung
+        # terlihat tanpa harus membandingkan angka satu per satu.
+        atas = max(p["rank1"] for p in papan)
+        bawah = min(p["rank1"] for p in papan)
+        for i, p in enumerate(papan[:9]):
+            terbaik = p["rank1"] >= atas - 1e-9
+            terburuk = p["rank1"] <= bawah + 1e-9
+            w = KUNING if p.get("aktif") else (
+                HIJAU if terbaik else (MERAH if terburuk else TEKS))
+            lebar = int((LEBAR_PANEL - 130) * p["rank1"] / max(atas, 1e-9))
+            kotak(kanvas, x0 + 96, y - 8, max(lebar, 2), 10,
+                  (60, 90, 60) if terbaik else PANEL2)
+            teks(kanvas, potong_label(p["label"], 96), (x0 + 12, y), 0.33, w,
+                 2 if (terbaik or p.get("aktif")) else 1)
+            teks(kanvas, f"{p['rank1']:.2f}%", (x0 + LEBAR_PANEL - 58, y),
+                 0.35, w, 2 if terbaik else 1)
+            if terbaik:
+                teks(kanvas, "TERBAIK", (x0 + 96, y + 10), 0.28, HIJAU, 1)
+                y += 10
+            elif terburuk and len(papan) > 1:
+                teks(kanvas, "TERBURUK", (x0 + 96, y + 10), 0.28, MERAH, 1)
+                y += 10
+            y += 17
+        if t.get("papan_catatan"):
+            y += 2
+            for baris in t["papan_catatan"]:
+                teks(kanvas, baris, (x0 + 12, y), 0.29, REDUP)
+                y += 11
+        return kanvas
+
     judul(kanvas, "AKURASI TERUKUR", (x0 + 12, y), 0.4, KUNING)
     y += 8
     if not ringkas:
         y += 16
-        teks(kanvas, "statistik.json belum ada", (x0 + 14, y), 0.34, REDUP)
-        y += 13
-        teks(kanvas, "angka usang lebih buruk", (x0 + 14, y), 0.34, REDUP)
-        y += 12
-        teks(kanvas, "daripada tidak ada angka", (x0 + 14, y), 0.34, REDUP)
+        for baris in ("belum ada hasil terukur", "untuk dataset ini.",
+                      "Jalankan rerank.py dulu -", "angka usang lebih buruk",
+                      "daripada tidak ada angka."):
+            teks(kanvas, baris, (x0 + 14, y), 0.33, REDUP)
+            y += 13
     else:
         for k, v in ringkas:
             y += 15
@@ -462,8 +647,13 @@ def gambar_strip(kanvas, y0, top5, ambang, mode_rerank):
 # ------------------------------------------------------------- kanvas
 def susun(frame, state, telemetry, hasil, top5, lebar=1500, tinggi=880,
           tahap=None, bbox=None, keypoint=None, pasangan=None,
-          gambar_kandidat=None, ringkas=None):
-    """Fungsi murni: semua masukan -> kanvas siap tampil."""
+          gambar_kandidat=None, ringkas=None, gambar_query=None):
+    """Fungsi murni: semua masukan -> kanvas siap tampil.
+
+    `gambar_query` adalah versi query SETELAH preprocessing, dipakai khusus
+    untuk panel match. Terpisah dari `frame` karena koordinat `pasangan`
+    hidup di ruang gambar praproses, bukan gambar asli.
+    """
     kanvas = np.full((tinggi, lebar, 3), BG, np.uint8)
     gambar_sidebar(kanvas, state)
 
@@ -482,7 +672,8 @@ def susun(frame, state, telemetry, hasil, top5, lebar=1500, tinggi=880,
 
     if state["match"] and pasangan is not None:
         kanvas[y_utama:y_strip, x0:x_panel] = panel_match(
-            frame, gambar_kandidat, pasangan, lebar_tengah, h_utama)
+            gambar_query if gambar_query is not None else frame,
+            gambar_kandidat, pasangan, lebar_tengah, h_utama)
     else:
         vis, s, ox, oy = muat_pas(frame, lebar_tengah, h_utama, BG)
         if state["bbox"]:

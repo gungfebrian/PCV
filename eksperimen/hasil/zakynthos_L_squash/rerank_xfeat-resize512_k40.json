@@ -1,0 +1,141 @@
+{
+  "matcher": "xfeat-resize512",
+  "k": 40,
+  "cv2": "4.13.0",
+  "model": "L",
+  "dataset": "zakynthos",
+  "dataset_hash": "7c4e53684e0f5f1d",
+  "tabel": {
+    "stage1": {
+      "label": "stage1",
+      "rank1": 8.75,
+      "rank5": 32.5,
+      "mAP": 21.35112694740077,
+      "n": 80,
+      "per_sisi": {
+        "left": {
+          "rank1": 12.5,
+          "rank5": 40.0,
+          "mAP": 26.00468199563594,
+          "n": 40
+        },
+        "right": {
+          "rank1": 5.0,
+          "rank5": 25.0,
+          "mAP": 16.69757189916559,
+          "n": 40
+        }
+      },
+      "per_spesies": {
+        "Loggerhead": {
+          "rank1": 8.75,
+          "rank5": 32.5,
+          "mAP": 21.35112694740077,
+          "n": 80
+        }
+      }
+    },
+    "murni": {
+      "label": "murni",
+      "rank1": 12.5,
+      "rank5": 26.25,
+      "mAP": 21.655855117710317,
+      "n": 80,
+      "delta_rank1": {
+        "delta": 3.75,
+        "ci95": [
+          -2.5,
+          10.0
+        ],
+        "signifikan": false
+      },
+      "mcnemar_rank1": {
+        "n01_baseline_salah_kondisi_benar": 5,
+        "n10_baseline_benar_kondisi_salah": 2,
+        "n_discordant": 7,
+        "p_value": 0.453125
+      },
+      "delta_mAP": {
+        "delta": 0.3047281703095498,
+        "ci95": [
+          -5.2903651244671535,
+          6.183144432523019
+        ],
+        "signifikan": false
+      },
+      "per_sisi": {
+        "left": {
+          "rank1": 17.5,
+          "rank5": 32.5,
+          "mAP": 26.08678850573032,
+          "n": 40
+        },
+        "right": {
+          "rank1": 7.5,
+          "rank5": 20.0,
+          "mAP": 17.224921729690315,
+          "n": 40
+        }
+      },
+      "per_spesies": {
+        "Loggerhead": {
+          "rank1": 12.5,
+          "rank5": 26.25,
+          "mAP": 21.655855117710317,
+          "n": 80
+        }
+      }
+    },
+    "rrf": {
+      "label": "rrf",
+      "rank1": 10.0,
+      "rank5": 36.25,
+      "mAP": 22.019295002880916,
+      "n": 80,
+      "delta_rank1": {
+        "delta": 1.25,
+        "ci95": [
+          -2.5,
+          5.0
+        ],
+        "signifikan": false
+      },
+      "mcnemar_rank1": {
+        "n01_baseline_salah_kondisi_benar": 2,
+        "n10_baseline_benar_kondisi_salah": 1,
+        "n_discordant": 3,
+        "p_value": 1.0
+      },
+      "delta_mAP": {
+        "delta": 0.6681680554801465,
+        "ci95": [
+          -2.674852529309755,
+          3.868256886738786
+        ],
+        "signifikan": false
+      },
+      "per_sisi": {
+        "left": {
+          "rank1": 12.5,
+          "rank5": 45.0,
+          "mAP": 26.002809522257607,
+          "n": 40
+        },
+        "right": {
+          "rank1": 7.5,
+          "rank5": 27.500000000000004,
+          "mAP": 18.03578048350422,
+          "n": 40
+        }
+      },
+      "per_spesies": {
+        "Loggerhead": {
+          "rank1": 10.0,
+          "rank5": 36.25,
+          "mAP": 22.019295002880916,
+          "n": 80
+        }
+      }
+    }
+  }
+}

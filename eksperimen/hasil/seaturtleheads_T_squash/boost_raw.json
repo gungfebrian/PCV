@@ -1,0 +1,229 @@
+{
+  "kondisi": "raw",
+  "ensemble": false,
+  "n": 1246,
+  "hasil": {
+    "polos": {
+      "label": "baseline cosine",
+      "rank1": 55.7784911717496,
+      "rank5": 68.37881219903691,
+      "mAP": 53.60743070673638,
+      "n": 1246,
+      "delta_rank1": 0.0,
+      "mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 0,
+        "n10_baseline_benar_kondisi_salah": 0,
+        "n_discordant": 0,
+        "p_value": 1.0
+      },
+      "bootstrap_mAP": {
+        "delta": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "signifikan": false
+      },
+      "per_sisi": {
+        "left": {
+          "rank1": 55.19203413940256,
+          "rank5": 69.84352773826458,
+          "mAP": 53.86472881543438,
+          "n": 703
+        },
+        "right": {
+          "rank1": 56.537753222836095,
+          "rank5": 66.48250460405156,
+          "mAP": 53.274317317390704,
+          "n": 543
+        }
+      },
+      "per_spesies": {}
+    },
+    "alpha_qe": {
+      "label": "alpha query expansion (k=3, a=3)",
+      "rank1": 54.73515248796148,
+      "rank5": 65.97110754414125,
+      "mAP": 54.430728300460466,
+      "n": 1246,
+      "delta_rank1": -1.0433386837881216,
+      "mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 20,
+        "n10_baseline_benar_kondisi_salah": 33,
+        "n_discordant": 53,
+        "p_value": 0.09837064844049181
+      },
+      "bootstrap_mAP": {
+        "delta": 0.008232975937240733,
+        "ci95": [
+          0.0034294619114826302,
+          0.012921010379099616
+        ],
+        "signifikan": true
+      },
+      "per_sisi": {
+        "left": {
+          "rank1": 54.480796586059746,
+          "rank5": 66.9985775248933,
+          "mAP": 55.134971613798,
+          "n": 703
+        },
+        "right": {
+          "rank1": 55.06445672191529,
+          "rank5": 64.64088397790056,
+          "mAP": 53.51897314525548,
+          "n": 543
+        }
+      },
+      "per_spesies": {}
+    },
+    "dba": {
+      "label": "database-side augmentation (k=2)",
+      "rank1": 56.42054574638844,
+      "rank5": 66.6131621187801,
+      "mAP": 56.23120885595599,
+      "n": 1246,
+      "delta_rank1": 0.6420545746388413,
+      "mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 39,
+        "n10_baseline_benar_kondisi_salah": 31,
+        "n_discordant": 70,
+        "p_value": 0.40296307504607976
+      },
+      "bootstrap_mAP": {
+        "delta": 0.026237781492196084,
+        "ci95": [
+          0.0204123246973824,
+          0.032102788983139764
+        ],
+        "signifikan": true
+      },
+      "per_sisi": {
+        "left": {
+          "rank1": 56.899004267425326,
+          "rank5": 67.70981507823613,
+          "mAP": 57.348982619696024,
+          "n": 703
+        },
+        "right": {
+          "rank1": 55.80110497237569,
+          "rank5": 65.19337016574586,
+          "mAP": 54.78407265722809,
+          "n": 543
+        }
+      },
+      "per_spesies": {}
+    },
+    "csls": {
+      "label": "CSLS koreksi hubness (k=5)",
+      "rank1": 51.4446227929374,
+      "rank5": 68.21829855537722,
+      "mAP": 51.547910729255165,
+      "n": 1246,
+      "delta_rank1": -4.333868378812198,
+      "mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 28,
+        "n10_baseline_benar_kondisi_salah": 82,
+        "n_discordant": 110,
+        "p_value": 2.519412514630622e-07
+      },
+      "bootstrap_mAP": {
+        "delta": -0.020595199774812178,
+        "ci95": [
+          -0.028167803571049428,
+          -0.013162576343929559
+        ],
+        "signifikan": true
+      },
+      "per_sisi": {
+        "left": {
+          "rank1": 50.497866287339974,
+          "rank5": 69.84352773826458,
+          "mAP": 51.66539457166446,
+          "n": 703
+        },
+        "right": {
+          "rank1": 52.67034990791897,
+          "rank5": 66.11418047882137,
+          "mAP": 51.395809180058606,
+          "n": 543
+        }
+      },
+      "per_spesies": {}
+    },
+    "k_recip": {
+      "label": "k-reciprocal Jaccard (k1=8, k2=3, lam=0.3)",
+      "rank1": 51.28410914927769,
+      "rank5": 63.56340288924559,
+      "mAP": 52.93905981407995,
+      "n": 1246,
+      "delta_rank1": -4.49438202247191,
+      "mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 27,
+        "n10_baseline_benar_kondisi_salah": 83,
+        "n_discordant": 110,
+        "p_value": 8.309916845028988e-08
+      },
+      "bootstrap_mAP": {
+        "delta": -0.006683708926564269,
+        "ci95": [
+          -0.015707772026567642,
+          0.0023008018083651998
+        ],
+        "signifikan": false
+      },
+      "per_sisi": {
+        "left": {
+          "rank1": 50.497866287339974,
+          "rank5": 65.14935988620199,
+          "mAP": 53.23304420298008,
+          "n": 703
+        },
+        "right": {
+          "rank1": 52.302025782688766,
+          "rank5": 61.51012891344383,
+          "mAP": 52.55845019088142,
+          "n": 543
+        }
+      },
+      "per_spesies": {}
+    },
+    "whiten": {
+      "label": "PCA-whitening dipasang dari galeri",
+      "rank1": 59.3900481540931,
+      "rank5": 72.71268057784911,
+      "mAP": 54.92904954388952,
+      "n": 1246,
+      "delta_rank1": 3.611556982343501,
+      "mcnemar": {
+        "n01_baseline_salah_kondisi_benar": 98,
+        "n10_baseline_benar_kondisi_salah": 53,
+        "n_discordant": 151,
+        "p_value": 0.0003124246799664638
+      },
+      "bootstrap_mAP": {
+        "delta": 0.013216188371531393,
+        "ci95": [
+          0.0027548534795825592,
+          0.023560700102920048
+        ],
+        "signifikan": true
+      },
+      "per_sisi": {
+        "left": {
+          "rank1": 60.17069701280228,
+          "rank5": 74.53769559032717,
+          "mAP": 56.25514401635044,
+          "n": 703
+        },
+        "right": {
+          "rank1": 58.3793738489871,
+          "rank5": 70.3499079189687,
+          "mAP": 53.21220900219517,
+          "n": 543
+        }
+      },
+      "per_spesies": {}
+    }
+  }
+}
