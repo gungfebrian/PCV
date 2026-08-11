@@ -390,6 +390,61 @@ def _():
     return f"delta konstan -> CI {[round(v, 3) for v in r['ci95']]}"
 
 
+@uji("matcher: semua kelas memenuhi kontrak yang sama")
+def t_kontrak_matcher():
+    """Menangkap kelas bug yang mematikan aplikasi saat RoMa dipilih.
+
+    Aplikasi dulu menebak jenis matcher lewat `hasattr(mm, "X")` lalu jatuh
+    ke `mm.det.detectAndCompute`. RoMa tidak punya `.det`, jadi memilihnya di
+    UI langsung melempar AttributeError. Tes ini bersifat STATIS — memeriksa
+    kelasnya, bukan instansnya — supaya tetap berjalan di lingkungan yang
+    bobot RoMa dan ALIKED-nya tidak bisa dipasang sama sekali.
+    """
+    import rerank as R
+    wajib = ("ekstrak", "ekstrak_array", "korespondensi", "skor")
+    atribut = ("KOORD_ASLI", "PUNYA_KEYPOINT")
+    kelas = [R.Klasik, R.XFeat, R.ALIKED, R.VisMatch, R.RoMa]
+    for K in kelas:
+        for m in wajib:
+            assert callable(getattr(K, m, None)), f"{K.__name__} tidak punya .{m}()"
+        for a in atribut:
+            assert isinstance(getattr(K, a, None), bool), \
+                f"{K.__name__} tidak menyatakan {a}"
+    return f"{len(kelas)} kelas x {len(wajib) + len(atribut)} anggota kontrak"
+
+
+@uji("matcher: ekstrak dari array == ekstrak dari berkas")
+def t_ekstrak_array():
+    """Jalur kamera dan jalur eksperimen harus memberi fitur yang sama.
+
+    Kalau berbeda, angka di layar tidak lagi bisa dibandingkan dengan angka
+    di laporan — dan tidak ada error apa pun yang muncul.
+    """
+    import cv2
+    import rerank as R
+    kat = P.baca_katalog()
+    gal, _ = P.bangun_split(kat)
+    path = gal[0]["path"]
+    rgb = cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
+    diuji = []
+    for nama in ("sift", "xfeat"):
+        try:
+            m = R.buat_matcher(nama)
+        except Exception:
+            continue                      # bobot tidak ada di mesin ini
+        a, b = m.ekstrak(path), m.ekstrak_array(rgb)
+        assert a is not None and b is not None, f"{nama}: fitur kosong"
+        assert len(a[0]) == len(b[0]), \
+            f"{nama}: jumlah keypoint beda ({len(a[0])} vs {len(b[0])})"
+        assert np.allclose(a[0], b[0], atol=1e-3), f"{nama}: koordinat beda"
+        # skor self-match harus tinggi lewat kontrak yang baru
+        s = m.skor(b, b)
+        assert s >= 100, f"{nama}: self-match cuma {s} inlier"
+        diuji.append(f"{nama} {len(a[0])}kp self={s:.0f}")
+    assert diuji, "tidak ada matcher yang bisa diuji di mesin ini"
+    return " | ".join(diuji)
+
+
 # ----------------------------------------------------------------- main
 def main():
     lolos = gagal = 0

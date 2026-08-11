@@ -39,7 +39,8 @@ REPO = os.path.dirname(BASE)
 DATASET = os.environ.get("DATASET", "reunion")
 DATA = os.path.join(REPO, "dataset_penyu",
                     {"reunion": "ReunionTurtles",
-                     "seaturtleheads": "SeaTurtleIDHeads"}[DATASET])
+                     "seaturtleheads": "SeaTurtleIDHeads",
+                     "zakynthos": "Zakynthos"}[DATASET])
 
 SISI = ("left", "right")          # ketat: topleft/topright/top/front/below dibuang
 
@@ -134,9 +135,67 @@ def _katalog_seaturtleheads(data):
     return keluar
 
 
+def _katalog_zakynthos(data):
+    """ZakynthosTurtles — loggerhead (Caretta caretta), Yunani.
+
+    Kenapa dataset ini penting: ia satu-satunya dari tiga yang punya
+    **tanggal DAN orientasi DAN bounding box kepala** sekaligus.
+
+      - tanggal  -> split berbasis tahun (protokol §3) benar-benar bisa dibuat
+      - orientasi-> kunci sisi bisa diterapkan
+      - bbox     -> hipotesis "crop kepala menolong" bisa diuji dengan kotak
+                    SEBENARNYA, tanpa perlu melatih YOLO lebih dulu
+
+    Yang terakhir itu penting secara metodologis: kalau crop kepala dengan
+    kotak ground-truth pun tidak menolong, melatih detektor tidak akan
+    menolong juga. Menguji hipotesisnya lebih dulu jauh lebih murah daripada
+    membangun detektornya.
+
+    Spesies ketiga: ReunionTurtles hijau + sisik, ini penyu tempayan. Jadi
+    hasil di sini sekaligus uji generalisasi lintas spesies.
+    """
+    keluar = []
+    with open(os.path.join(data, "annotations.csv"), encoding="utf-8-sig") as f:
+        for r in csv.DictReader(f):
+            if r["orientation"] not in SISI:
+                continue
+            keluar.append({
+                "path": os.path.join(data, "images", r["path"]),
+                "identity": r["identity"],
+                "position": r["orientation"],
+                "year": int(r["date"].split("_")[-1]),   # DD_MM_YYYY
+                "species": "Loggerhead",
+            })
+    return keluar
+
+
+def kotak_kepala_gt(path):
+    """Bounding box kepala dari anotasi manusia, bukan dari detektor.
+
+    Hanya ada untuk Zakynthos. Mengembalikan (x, y, w, h) atau None.
+    """
+    global _BBOX_GT
+    if _BBOX_GT is None:
+        p = os.path.join(DATA, "bbox.csv")
+        _BBOX_GT = {}
+        if os.path.exists(p):
+            with open(p, encoding="utf-8-sig") as f:
+                for r in csv.DictReader(f):
+                    if r["label_name"] != "head":
+                        continue
+                    _BBOX_GT[r["image_name"]] = (
+                        int(r["bbox_x"]), int(r["bbox_y"]),
+                        int(r["bbox_width"]), int(r["bbox_height"]))
+    return _BBOX_GT.get(os.path.basename(path))
+
+
+_BBOX_GT = None
+
+
 def baca_katalog(data=DATA):
-    kat = (_katalog_reunion if DATASET == "reunion"
-           else _katalog_seaturtleheads)(data)
+    kat = {"reunion": _katalog_reunion,
+           "seaturtleheads": _katalog_seaturtleheads,
+           "zakynthos": _katalog_zakynthos}[DATASET](data)
     hilang = [r["path"] for r in kat if not os.path.exists(r["path"])]
     if hilang:
         raise FileNotFoundError(
@@ -226,6 +285,28 @@ def _grayscale(rgb):
     return cv2.cvtColor(g, cv2.COLOR_GRAY2RGB)
 
 
+def _resize(rgb, n):
+    """Samakan semua foto ke n x n. Lihat _resize368 untuk penjelasan lengkap."""
+    return cv2.resize(rgb, (n, n), interpolation=cv2.INTER_AREA)
+
+
+def _resize368(rgb):
+    """Samakan SEMUA foto ke 368x368 sebelum masuk pipeline.
+
+    Foto ReunionTurtles ukurannya beragam, dari 253x227 sampai 800x600.
+    Kondisi ini menyeragamkannya lebih dulu, jadi tiap gambar punya resolusi
+    efektif yang sama saat masuk model dan saat masuk matcher stage-2.
+
+    CATATAN: ini BUKAN mengubah ukuran input model. MegaDescriptor-L-384
+    adalah Swin dengan `fixed_input_size=True` dan menolak apa pun selain
+    384x384 (`AssertionError: Input height (368) doesn't match model (384)`).
+    Jadi urutannya: asli -> 368x368 -> transform kanonik -> 384x384 -> model.
+    Artinya ada langkah naik 368->384; kalau kondisi ini menang, kemenangannya
+    datang dari penyeragaman resolusi, bukan dari angka 368 itu sendiri.
+    """
+    return cv2.resize(rgb, (368, 368), interpolation=cv2.INTER_AREA)
+
+
 def _crop_tengah(rgb, frac):
     h, w = rgb.shape[:2]
     ch, cw = int(round(h * frac)), int(round(w * frac))
@@ -242,7 +323,87 @@ KONDISI = {
     "clahe":     _clahe,
     "gray":      _grayscale,
     "crop_wb":   lambda im: _white_balance(_crop_tengah(im, 0.70)),
+    "resize368": _resize368,
+    # Sapu ukuran: 368 dipilih karena kebetulan disebut, bukan dioptimasi.
+    # Kalau yang menolong memang penyeragaman skala (bukan angka 368),
+    # ukuran lain harus memberi efek serupa. Diuji, bukan diasumsikan.
+    "resize256": lambda im: _resize(im, 256),
+    "resize320": lambda im: _resize(im, 320),
+    "resize448": lambda im: _resize(im, 448),
+    "resize512": lambda im: _resize(im, 512),
+    # Lanjutan sapu: sampai 512 efeknya masih monoton naik, jadi titik
+    # baliknya belum ketemu. Kalau 640 dan 768 tetap naik, yang menolong
+    # adalah RESOLUSI, bukan penyeragaman skala — dua penjelasan yang
+    # berbeda dan hanya bisa dipisahkan dengan mengukur lebih jauh.
+    "resize640": lambda im: _resize(im, 640),
+    "resize768": lambda im: _resize(im, 768),
 }
+
+
+# Kondisi yang bekerja pada BERKAS, bukan pada array — potongannya sudah
+# dihitung sebelumnya oleh detektor dan disimpan ke disk. Dipisah dari
+# KONDISI karena fungsinya butuh tahu jalur asal gambar, bukan cuma pikselnya.
+def kepala_gt(path, ukuran=512, margin=0.18):
+    """Crop kepala dari kotak ANOTASI MANUSIA, lalu seragamkan ke 512x512.
+
+    Hanya bisa dipakai di Zakynthos. Nilainya besar secara metodologis:
+    hipotesis "membuang latar menolong" bisa diuji dengan kotak yang
+    sempurna, TANPA melatih detektor lebih dulu. Kalau dengan kotak
+    ground-truth pun tidak menolong, melatih YOLO tidak akan menolong —
+    dan itu menghemat berhari-hari kerja.
+
+    Margin 18% sengaja ditambahkan: kepala yang terpotong lebih merugikan
+    daripada sedikit latar yang ikut terbawa.
+    """
+    kotak = kotak_kepala_gt(path)
+    if kotak is None:
+        return None
+    bgr = cv2.imread(path)
+    if bgr is None:
+        return None
+    h, w = bgr.shape[:2]
+    x, y, bw, bh = kotak
+    mx, my = bw * margin, bh * margin
+    x0, y0 = max(0, int(x - mx)), max(0, int(y - my))
+    x1, y1 = min(w, int(x + bw + mx)), min(h, int(y + bh + my))
+    if x1 - x0 < 16 or y1 - y0 < 16:
+        return None
+    potong = cv2.resize(bgr[y0:y1, x0:x1], (ukuran, ukuran),
+                        interpolation=cv2.INTER_AREA)
+    return cv2.cvtColor(potong, cv2.COLOR_BGR2RGB)
+
+
+def berkas_kepala(path):
+    """Potongan kepala hasil YOLO untuk sebuah foto, atau None.
+
+    Mengembalikan None kalau detektornya gagal pada foto itu. Pemanggil WAJIB
+    memutuskan secara sadar apa yang dilakukan terhadap kasus gagal —
+    membiarkannya diam-diam jatuh kembali ke gambar penuh akan mencampur dua
+    kondisi berbeda di dalam satu angka.
+    """
+    global _PETA_KEPALA
+    if _PETA_KEPALA is None:
+        d = os.path.join(os.path.dirname(BASE), "dataset_penyu",
+                         f"{DATASET}_kepala")
+        p = os.path.join(d, "peta.json")
+        if not os.path.exists(p):
+            raise SystemExit(
+                f"potongan kepala belum ada di {d}\n"
+                "Jalankan di Mac:  python3 yolo_kepala.py --potong\n"
+                "(bobot YOLO diunduh dari GitHub, yang diblokir di sandbox)")
+        _PETA_KEPALA = {k: os.path.join(d, v["berkas"])
+                        for k, v in json.load(open(p)).items()}
+    q = _PETA_KEPALA.get(path)
+    if q is None:
+        return None
+    bgr = cv2.imread(q)
+    return None if bgr is None else cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
+
+
+_PETA_KEPALA = None
+
+# Kontrak: path -> array RGB, atau None kalau tidak tersedia untuk foto itu.
+KONDISI_BERKAS = {"kepala": berkas_kepala, "kepala_gt": kepala_gt}
 
 LABEL = {
     "raw": "Raw (baseline)",
@@ -251,6 +412,36 @@ LABEL = {
     "clahe": "CLAHE (L, clip 2.0)",
     "gray": "Grayscale",
     "crop_wb": "Crop + white balance",
+    "resize368": "Resize seragam 368x368",
+    "resize256": "Resize seragam 256x256",
+    "resize320": "Resize seragam 320x320",
+    "resize448": "Resize seragam 448x448",
+    "resize512": "Resize seragam 512x512",
+    "resize640": "Resize seragam 640x640",
+    "resize768": "Resize seragam 768x768",
+    "kepala": "Crop kepala YOLO 512x512",
+    "kepala_gt": "Crop kepala anotasi manusia 512x512",
+}
+
+# Label pendek untuk UI berkolom sempit. Tanpa ini, kelima kondisi resize
+# terpotong menjadi "Resize seragam ." yang persis sama satu sama lain —
+# tombolnya tetap berfungsi, tapi tidak ada cara membedakan mana yang mana.
+LABEL_PENDEK = {
+    "raw": "Raw",
+    "crop": "Crop kepala",
+    "wb": "White balance",
+    "clahe": "CLAHE",
+    "gray": "Grayscale",
+    "crop_wb": "Crop + WB",
+    "resize256": "256 px",
+    "resize320": "320 px",
+    "resize368": "368 px",
+    "resize448": "448 px",
+    "resize512": "512 px",
+    "resize640": "640 px",
+    "resize768": "768 px",
+    "kepala": "Kepala YOLO",
+    "kepala_gt": "Kepala anotasi",
 }
 
 
@@ -331,11 +522,26 @@ def embed(paths, kondisi, model, batch=16, threads=4):
     """List path -> matriks embedding L2-normalized (n, DIM)."""
     import torch
     torch.set_num_threads(threads)
-    fn = KONDISI[kondisi]
+    # Dua jenis kondisi: berbasis array (resize, CLAHE, ...) dan berbasis
+    # BERKAS (crop kepala, yang butuh tahu jalur asal untuk mencari kotaknya).
+    # Kalau kondisi berkas tidak punya entri untuk sebuah foto, di sini
+    # sengaja MELEMPAR error, bukan diam-diam memakai gambar penuh — kalau
+    # jatuh diam-diam, satu angka akan mencampur dua kondisi berbeda.
+    berkas = KONDISI_BERKAS.get(kondisi)
+    fn = None if berkas else KONDISI[kondisi]
     keluar = np.zeros((len(paths), DIM), np.float32)
     for i in range(0, len(paths), batch):
         xs = []
         for p in paths[i:i + batch]:
+            if berkas:
+                rgb = berkas(p)
+                if rgb is None:
+                    raise RuntimeError(
+                        f"kondisi '{kondisi}' tidak punya potongan untuk {p}. "
+                        "Query yang gagal dideteksi tidak boleh diam-diam "
+                        "diganti gambar penuh.")
+                xs.append(transform_kanonik(rgb))
+                continue
             bgr = cv2.imread(p)
             rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
             xs.append(transform_kanonik(fn(rgb)))
@@ -388,3 +594,18 @@ def ringkas(hasil):
             "rank5": float(hasil["rank5"].mean() * 100),
             "mAP": float(hasil["ap"].mean() * 100),
             "n": int(len(hasil["ap"]))}
+
+
+# Sapu MARGIN — mengukur dosis-respons, bukan sekadar satu titik.
+#
+# Margin besar = kotak diperlebar = kepala mengisi porsi lebih kecil dari
+# potongan. Ini meniru "kepala kecil di dalam frame" secara terkendali, tanpa
+# mengganti dataset. Kalau akurasinya turun mulus seiring margin membesar,
+# yang menentukan memang PORSI KEPALA DI FRAME - bukan sesuatu yang khas
+# Zakynthos. Dan itu memberi aturan yang bisa dipakai untuk memutuskan kapan
+# YOLO diperlukan di dataset mana pun.
+for _m in (0.5, 1.0, 2.0, 4.0):
+    KONDISI_BERKAS[f"kepala_m{int(_m*100)}"] = (
+        lambda path, _mm=_m: kepala_gt(path, margin=_mm))
+    LABEL[f"kepala_m{int(_m*100)}"] = f"Kepala + margin {_m:g}x"
+    LABEL_PENDEK[f"kepala_m{int(_m*100)}"] = f"kepala m{_m:g}"

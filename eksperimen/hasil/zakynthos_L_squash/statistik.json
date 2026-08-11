@@ -1,0 +1,82 @@
+{
+  "raw": {
+    "label": "Raw (baseline)",
+    "rank1": 8.75,
+    "rank5": 32.5,
+    "mAP": 21.35112694740077,
+    "n": 80,
+    "per_sisi": {
+      "left": {
+        "rank1": 12.5,
+        "rank5": 40.0,
+        "mAP": 26.00468199563594,
+        "n": 40
+      },
+      "right": {
+        "rank1": 5.0,
+        "rank5": 25.0,
+        "mAP": 16.69757189916559,
+        "n": 40
+      }
+    },
+    "per_spesies": {
+      "Loggerhead": {
+        "rank1": 8.75,
+        "rank5": 32.5,
+        "mAP": 21.35112694740077,
+        "n": 80
+      }
+    }
+  },
+  "kepala_gt": {
+    "label": "Crop kepala anotasi manusia 512x512",
+    "rank1": 63.74999999999999,
+    "rank5": 88.75,
+    "mAP": 74.66000258799171,
+    "n": 80,
+    "delta_rank1": {
+      "delta": 55.0,
+      "ci95": [
+        43.75,
+        66.25
+      ],
+      "signifikan": true
+    },
+    "mcnemar_rank1": {
+      "n01_baseline_salah_kondisi_benar": 44,
+      "n10_baseline_benar_kondisi_salah": 0,
+      "n_discordant": 44,
+      "p_value": 1.1368683772161603e-13
+    },
+    "delta_mAP": {
+      "delta": 53.30887564059094,
+      "ci95": [
+        44.63311336086366,
+        61.837338241920165
+      ],
+      "signifikan": true
+    },
+    "per_sisi": {
+      "left": {
+        "rank1": 70.0,
+        "rank5": 90.0,
+        "mAP": 79.1279761904762,
+        "n": 40
+      },
+      "right": {
+        "rank1": 57.49999999999999,
+        "rank5": 87.5,
+        "mAP": 70.19202898550725,
+        "n": 40
+      }
+    },
+    "per_spesies": {
+      "Loggerhead": {
+        "rank1": 63.74999999999999,
+        "rank5": 88.75,
+        "mAP": 74.66000258799171,
+        "n": 80
+      }
+    }
+  }
+}
