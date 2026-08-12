@@ -6,7 +6,7 @@ Project: PCV sea-turtle individual identification
 
 ## 1. Objective
 
-Build an offline, human-centered application that lets a researcher:
+Build an offline, frontend-independent prototype engine that lets a researcher:
 
 1. register a verified turtle from one or more photographs;
 2. submit a later sighting;
@@ -14,13 +14,14 @@ Build an offline, human-centered application that lets a researcher:
 4. confirm a match, reject all candidates, or register a new turtle; and
 5. measure whether the system reaches at least 85% Rank-1 accuracy on an honest, time-aware known-turtle test.
 
-The application must not force an unknown turtle into an existing identity. It is a decision-support tool, not an autonomous authority.
+The prototype must not force an unknown turtle into an existing identity. It is a decision-support engine, not an autonomous authority. A separate frontend already exists and will consume the validated prototype contract in a later integration phase.
 
 ## 2. Scope
 
 ### In scope
 
-- Offline macOS application served locally in a browser.
+- Offline macOS prototype with a framework-independent Python API.
+- CLI/JSON demonstration harness and generated top-five contact sheet for validation before frontend integration.
 - Local SQLite registry and local image storage.
 - Registration of turtles with verified identity and encounter metadata.
 - Multiple reference photographs per identity and per facial side.
@@ -29,11 +30,13 @@ The application must not force an unknown turtle into an existing identity. It i
 - Explicit `match`, `needs review`, and `new/unknown turtle` outcomes.
 - Frozen MegaDescriptor baseline.
 - Comparable experiments for multi-photo aggregation, ArcFace fine-tuning, and a dedicated turtle embedding model.
+- Experimental head and front-flipper modalities, evaluated separately before any score fusion.
 - Time-aware closed-set and open-set evaluation.
 - A final Notion report containing method, data lineage, results, limitations, and reproducible commands.
 
 ### Out of scope for the first release
 
+- Rebuilding or replacing the existing frontend.
 - Cloud hosting, accounts, or multi-user synchronization.
 - Fully automatic permanent identity assignment.
 - A guaranteed 85% result before Olive Ridley repeat-sighting data exists.
@@ -56,8 +59,8 @@ The application must not force an unknown turtle into an existing identity. It i
 1. Researcher creates or selects a verified Turtle ID.
 2. Researcher enters species, encounter date/time, location, observer, tag ID, and notes.
 3. Researcher uploads one or more photographs.
-4. System detects the head, estimates or requests facial side, and computes quality warnings.
-5. Researcher accepts/adjusts the crop and confirms side.
+4. System detects the selected body region (head or front flipper), estimates or requests side, and computes quality warnings.
+5. Researcher accepts/adjusts the crop and confirms body region and side.
 6. System stores originals, crops, quality data, embeddings, and provenance.
 
 Registration accepts a single usable photograph but recommends at least three varied photographs per side. The UI must display registry completeness by side.
@@ -65,7 +68,7 @@ Registration accepts a single usable photograph but recommends at least three va
 ### 4.2 Identify later sighting
 
 1. Researcher uploads a new photograph and encounter metadata.
-2. System detects/crops the head and applies the same preprocessing contract used during registration.
+2. System detects/crops the selected body region and applies the same preprocessing contract used during registration.
 3. System searches only compatible reference profiles, normally same species and same side.
 4. System aggregates evidence across all reference photographs belonging to each identity.
 5. System displays up to five identity candidates with gallery photos, query crop, similarity evidence, quality warnings, and rank.
@@ -74,7 +77,7 @@ Registration accepts a single usable photograph but recommends at least three va
 
 ### 4.3 Candidate confidence
 
-Raw cosine similarity and local-inlier scores are not percentages. Until calibration succeeds, the UI shows:
+Raw cosine similarity and local-inlier scores are not percentages. Until calibration succeeds, the prototype output exposes evidence labels for the frontend:
 
 - High evidence
 - Review required
@@ -86,7 +89,7 @@ After calibration on held-out chronological data, the UI may show `estimated mat
 
 ```mermaid
 flowchart LR
-    UI["Local browser UI"] --> APP["Application service"]
+    UI["CLI/JSON prototype adapter"] --> APP["Application service"]
     APP --> REG["Registration service"]
     APP --> ID["Identification service"]
     REG --> PRE["Head crop, side, quality"]
@@ -103,25 +106,25 @@ flowchart LR
 ### 5.1 Components
 
 - `registry`: identities, encounters, photos, crops, embeddings, and confirmations.
-- `preprocessing`: deterministic head detection/crop, side handling, and quality measurements.
+- `preprocessing`: deterministic head/flipper crop, body-region and side handling, and quality measurements.
 - `embedding`: swappable frozen MegaDescriptor and trained alternatives behind one interface.
 - `retrieval`: image-to-image scores followed by identity-level aggregation.
 - `verification`: optional XFeat/geometric evidence for uncertain top candidates only.
 - `calibration`: maps held-out evidence features to probability-like confidence and open-set thresholds.
 - `evaluation`: locked chronological splits, metrics, paired comparisons, and result manifests.
-- `ui`: registration, identification, top-five review, audit history, and model/result status.
+- `prototype`: CLI/JSON contract, generated top-five contact sheet, audit inspection, and model/result status for frontend integration.
 
 ### 5.2 Technology
 
 - Python 3.10-compatible ML/runtime code.
-- Streamlit local UI for the first usable release.
 - SQLite for metadata; image and embedding artifacts stored under an application data directory with paths in SQLite.
 - PyTorch/timm for MegaDescriptor and fine-tuning experiments.
 - Ultralytics YOLO for head detection baseline.
 - OpenCV/XFeat for optional local verification.
 - NumPy/SciPy/scikit-learn for evaluation and calibration.
+- Typer or argparse for the local CLI; JSON-serializable dataclasses define the future frontend contract.
 
-The ML services must not import Streamlit. The same engine must run in tests and experiments.
+The core services must not import any frontend framework. The same engine must run in tests, experiments, the prototype harness, and the later frontend adapter.
 
 ## 6. Data Model
 
@@ -144,7 +147,8 @@ The ML services must not import Streamlit. The same engine must run in tests and
 
 - UUID and Encounter UUID
 - original path and immutable checksum
-- facial side: left, right, front/unknown
+- body region: head or front_flipper
+- side: left, right, front/unknown
 - detector/crop coordinates and detector version
 - blur, brightness, head-area fraction, resolution, and warnings
 - inclusion state and exclusion reason
@@ -192,6 +196,15 @@ The ML services must not import Streamlit. The same engine must run in tests and
 - Compare accuracy, robustness, latency, and artifact size.
 - Adopt only if it improves the predeclared evaluation metrics.
 
+### Experimental modality E: Front-flipper matching
+
+- Treat front-flipper crops as a separate modality with separate embeddings, thresholds, metrics, and missing-data behavior.
+- Begin with frozen MegaDescriptor and local-feature baselines on labelled flipper crops.
+- Do not compare a query head against a registered flipper.
+- Test head-only, flipper-only, and paired head+flipper conditions on the identical identities and encounters.
+- Permit fusion only if validation shows a statistically supported gain without worsening open-set false accepts.
+- Keep head-only identification fully functional because field sightings often lack a usable flipper view.
+
 ### Detector experiments
 
 1. Current Zakynthos YOLO baseline.
@@ -234,6 +247,7 @@ The final 85% claim requires verified Olive Ridley identities with earlier regis
 ### 9.3 Robustness slices
 
 - facial side;
+- body region (head versus front flipper);
 - species;
 - head area in frame;
 - blur;
@@ -270,7 +284,9 @@ The final 85% claim requires verified Olive Ridley identities with earlier regis
 - reject all five candidates and register a new identity;
 - correct a mistaken confirmation without losing audit history;
 - missing detector output uses an explicit fallback/warning;
-- app engine decisions equal experiment engine decisions.
+- prototype engine decisions equal experiment engine decisions.
+- JSON output round-trips without losing candidate ranks, evidence, warnings, or provenance.
+- generated top-five contact sheet contains the query crop and correct registered reference for each candidate.
 
 ### Regression and leakage tests
 
@@ -295,9 +311,10 @@ At least three people not involved in implementation attempt registration and la
 
 - Implement schema, repository layer, image artifact layout, registration engine, embedding backend interface, and tests.
 
-### Phase 2: Human-centered application
+### Phase 2: Human-centered prototype contract
 
-- Implement registration, identification, top-five review, new-turtle flow, history, corrections, and quality warnings.
+- Implement registration, identification, top-five JSON/contact-sheet review, new-turtle flow, history, corrections, and quality warnings.
+- Freeze the frontend integration contract without modifying the existing frontend.
 
 ### Phase 3: Honest baseline evaluation
 
@@ -308,6 +325,7 @@ At least three people not involved in implementation attempt registration and la
 - Train/evaluate cross-dataset detector.
 - Fine-tune MegaDescriptor with ArcFace.
 - Train/evaluate smaller dedicated ArcFace model.
+- Evaluate front-flipper retrieval separately and test head+flipper fusion only after both unimodal baselines are valid.
 - Calibrate unknown thresholds and confidence only on held-out validation data.
 
 ### Phase 5: Real Olive Ridley test and report
@@ -318,16 +336,18 @@ At least three people not involved in implementation attempt registration and la
 
 ## 12. Acceptance Criteria
 
-- Application works offline on the target Mac.
+- Prototype engine and CLI work offline on the target Mac.
 - User can register an identity with multiple photos and metadata.
-- User can identify a later photo and review up to five candidates.
+- User can identify a later photo and receive up to five candidates as JSON plus a generated visual contact sheet.
 - User can select none of the candidates and register a new turtle.
 - Left/right handling and quality warnings are explicit.
+- Head/flipper routing is explicit; cross-region comparisons are prohibited.
 - All decisions retain provenance and are correctable without deleting history.
 - No raw similarity is presented as an accuracy percentage.
 - Numeric confidence is displayed only after held-out calibration passes documented checks.
 - Frozen MegaDescriptor remains a reproducible baseline.
 - Every trained alternative is tested on the same locked query set.
+- Flipper-only and any fused condition are reported separately from the head-only primary result.
 - Final report includes sample counts, Rank-1, Rank-5, mAP, open-set metrics, confidence intervals, latency, and robustness slices.
 - The project claims at least 85% only if the locked time-aware Olive Ridley known-turtle test proves it; otherwise it reports the measured result and the remaining data gap.
 
@@ -350,4 +370,3 @@ At least three people not involved in implementation attempt registration and la
 - XFeat: https://openaccess.thecvf.com/content/CVPR2024/papers/Potje_XFeat_Accelerated_Features_for_Lightweight_Image_Matching_CVPR_2024_paper.pdf
 - Olive Ridley Project photo-ID protocol: https://oliveridleyproject.org/research/biogeography/sea-turtle-photo-id/
 - Sea-turtle flipper-scale photo-ID study: https://www.sciencedirect.com/science/article/pii/S0022098118301400
-
