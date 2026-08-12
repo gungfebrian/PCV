@@ -109,6 +109,10 @@ def _katalog_reunion(data):
                 "identity": f"{r['Species']}/{r['Turtle_ID']}",
                 "position": ori,
                 "year": tahun,
+                # Tanggal LENGKAP, bukan cuma tahun. Dipakai `periksa_curiga.py`
+                # untuk mendeteksi foto dari sesi pemotretan yang sama, yang
+                # nyaris identik dan membuat angka naik semu.
+                "date": datetime.strptime(r["Date"], "%m/%d/%Y").date().isoformat(),
                 "species": r["Species"],
             })
     return keluar
@@ -130,6 +134,8 @@ def _katalog_seaturtleheads(data):
             "identity": a["identity"],
             "position": a["position"],
             "year": tahun,
+            # 'YYYY:MM:DD HH:MM:SS' -> 'YYYY-MM-DD'
+            "date": im["date"][:10].replace(":", "-"),
             "species": None,          # tidak tersedia di dataset ini
         })
     return keluar
@@ -164,6 +170,7 @@ def _katalog_zakynthos(data):
                 "identity": r["identity"],
                 "position": r["orientation"],
                 "year": int(r["date"].split("_")[-1]),   # DD_MM_YYYY
+                "date": "-".join(reversed(r["date"].split("_"))),
                 "species": "Loggerhead",
             })
     return keluar

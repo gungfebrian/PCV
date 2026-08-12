@@ -70,15 +70,28 @@ def main(kondisi="raw"):
     # Ini tersangka terkuat untuk angka yang terlalu bagus. Kalau galeri dan
     # query berisi foto dari sesi pemotretan yang sama, sistem mencocokkan
     # dua gambar yang nyaris identik - dan angkanya tidak berarti apa-apa.
-    tgl = {r["path"]: r.get("date") or r.get("year") for r in kat}
+    tgl = {r["path"]: r.get("date") for r in kat}
+    ada_tgl = sum(1 for v in tgl.values() if v)
+    # Per (individu, SISI) - bukan per individu. Sisi kiri dan kanan dikunci
+    # terpisah, jadi tabrakan antar-sisi tidak berbahaya dan tidak boleh
+    # dihitung sebagai kebocoran. Versi pertama alat ini salah di sini dan
+    # memberi alarm palsu.
     hari_g = defaultdict(set)
     for r in gal:
-        hari_g[r["identity"]].add(tgl.get(r["path"]))
-    tabrakan = sum(1 for r in qry if tgl.get(r["path"]) in hari_g[r["identity"]])
-    lapor("query dan galeri dari tanggal yang sama",
-          GAGAL if tabrakan else LULUS,
-          f"{tabrakan}/{len(qry)} query punya foto galeri dari TANGGAL SAMA"
-          if tabrakan else "tidak ada tanggal yang bertabrakan")
+        hari_g[(r["identity"], r["side"])].add(tgl.get(r["path"]))
+    tabrakan = sum(1 for r in qry
+                   if tgl.get(r["path"])
+                   and tgl[r["path"]] in hari_g[(r["identity"], r["side"])])
+    if not ada_tgl:
+        lapor("query dan galeri dari tanggal yang sama", PERIKSA,
+              "katalog tidak menyimpan tanggal - tidak bisa diperiksa")
+    else:
+        lapor("query dan galeri dari tanggal yang sama",
+              GAGAL if tabrakan else LULUS,
+              f"{tabrakan}/{len(qry)} query punya foto galeri dari TANGGAL "
+              f"SAMA di sisi yang sama - itu near-duplicate"
+              if tabrakan else
+              f"tidak ada tabrakan ({ada_tgl}/{len(kat)} foto bertanggal)")
 
     # ---------------------------------------------------------- 4. embedding
     try:
@@ -139,10 +152,35 @@ def main(kondisi="raw"):
     h_bebas = P.metrik_dari_matriks(S.copy(), id_q, id_g)
     r1k = 100 * h_kunci["rank1"].mean()
     r1b = 100 * h_bebas["rank1"].mean()
-    lapor("kunci sisi benar-benar berpengaruh",
-          PERIKSA if abs(r1k - r1b) < 0.5 else LULUS,
-          f"dengan kunci {r1k:.2f}%  tanpa kunci {r1b:.2f}%\n"
-          f"kalau nyaris sama, kunci sisinya mungkin tidak terpasang")
+    # Yang diperiksa MEKANISMENYA, bukan akibatnya pada akurasi.
+    #
+    # Versi pertama alat ini memberi alarm kalau akurasi dengan dan tanpa
+    # kunci nyaris sama - dan itu SALAH. Kalau stage-1 sangat kuat, memangkas
+    # kandidat separuh memang tidak mengubah apa-apa: jawaban benarnya tetap
+    # menang di kedua kondisi. Akurasi yang mirip bukan bukti kunci tidak
+    # terpasang.
+    #
+    # Yang benar-benar membuktikan kuncinya terpasang: jumlah kandidat yang
+    # sah harus BERKURANG, dan tidak boleh ada kandidat beda sisi yang
+    # bernilai berhingga.
+    n_sah = int(np.isfinite(S_kunci).sum())
+    n_total = S_kunci.size
+    bocor = int(np.isfinite(S_kunci[s_q[:, None] != s_g[None, :]]).sum())
+    lapor("kunci sisi terpasang (mekanisme)",
+          GAGAL if bocor else LULUS,
+          f"{bocor} pasangan beda-sisi masih bernilai berhingga" if bocor
+          else f"{n_total - n_sah} dari {n_total} pasangan ditutup "
+               f"({100 * (n_total - n_sah) / n_total:.1f}%)")
+
+    # Akibatnya pada akurasi dilaporkan sebagai INFORMASI, bukan peringatan.
+    arah = "menurunkan" if r1b > r1k else "menaikkan"
+    lapor("akibat kunci sisi pada akurasi", LULUS,
+          f"dengan kunci {r1k:.2f}%  tanpa kunci {r1b:.2f}%  "
+          f"({arah} {abs(r1b - r1k):.2f} poin)\n"
+          f"Kalau tanpa kunci JUSTRU lebih tinggi, berarti model bisa "
+          f"mencocokkan lintas sisi - lewat bentuk kepala atau warna, bukan "
+          f"pola sisik. Kuncinya tetap dipertahankan: pola sisik kiri dan "
+          f"kanan berbeda, jadi cocok lintas sisi bukan bukti identitas.")
 
     # ------------------------------------------- 7. seberapa mudah tugasnya
     kandidat = int(np.isfinite(S_kunci[0]).sum())
