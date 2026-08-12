@@ -17,7 +17,7 @@
 set -e
 cd "$(dirname "$0")"
 PY=../.venv/bin/python
-MODE="${1:-semua}"
+MODE="${1:-}"
 
 # ------------------------------------------------------------------ YOLO
 latih_yolo() {
@@ -103,11 +103,80 @@ jalankan_besar() {
   echo "atau sebagian dari kecilnya memang karena T-224 lebih lemah?"
 }
 
+# ------------------------------------------- YOLO di dataset LAIN
+lintas_dataset() {
+  DS="${2:-reunion}"
+  echo "=================================================================="
+  echo " UJI DETEKTOR LINTAS DATASET -> $DS"
+  echo "=================================================================="
+  echo
+  echo "Detektor dilatih pada penyu TEMPAYAN di Yunani (Zakynthos)."
+  echo "Sekarang diuji pada dataset lain tanpa dilatih ulang sama sekali."
+  echo
+  echo "Kalau berhasil, itu bukti kuat ia akan bekerja untuk OLIVE RIDLEY"
+  echo "Indonesia juga - spesies yang belum punya data sama sekali."
+  echo
+
+  if [ ! -f yolo_kepala/kepala.pt ]; then
+    echo "GAGAL: bobot belum ada. Jalankan dulu: bash jalankan_di_mac.sh yolo"
+    exit 1
+  fi
+
+  echo "-- 1/4 berapa kepala yang ketemu"
+  DATASET=$DS MODEL=L $PY yolo_kepala.py --ukur
+
+  echo
+  echo "-- 2/4 potong seluruh dataset"
+  DATASET=$DS MODEL=L $PY yolo_kepala.py --potong
+
+  echo
+  echo "-- 3/4 embedding stage-1 dari gambar ter-crop"
+  DATASET=$DS MODEL=L $PY jalankan.py kepala --budget=100000
+
+  echo
+  echo "-- 4/4 ukur: stage-1 saja, lalu + XFeat"
+  DATASET=$DS MODEL=L STAGE1=kepala $PY rerank.py \
+      --matcher xfeat --kondisi kepala --k 40 --budget 100000
+
+  echo
+  if [ "$DS" = "reunion" ]; then
+    echo "PEMBANDING ReunionTurtles:"
+    echo "   stage-1 raw                Rank-1 25,00%"
+    echo "   stage-1 resize512          Rank-1 24,40%   <- resize TIDAK menolong stage-1"
+    echo "   + XFeat resize512 k=40     Rank-1 73,81%"
+    echo
+    echo "DUA KEMUNGKINAN, keduanya berguna:"
+    echo
+    echo " A. stage-1 kepala JAUH di atas 25%"
+    echo "    -> crop menolong di sini juga. Dan kalau tembus ~60%,"
+    echo "       XFeat kemungkinan jadi tidak perlu - pipeline 8x lebih murah."
+    echo
+    echo " B. stage-1 kepala tetap ~25%"
+    echo "    -> foto ReunionTurtles memang sudah close-up, jadi crop tidak"
+    echo "       menambah apa pun. Itu MENGONFIRMASI aturan kita:"
+    echo "       subjek > 25% frame -> crop tidak perlu."
+    echo
+    echo "Yang B bukan kegagalan. Ia menutup pertanyaan yang selama ini"
+    echo "cuma bisa dijawab dengan dugaan."
+  fi
+}
+
 case "$MODE" in
   yolo)  latih_yolo ;;
+  lintas) lintas_dataset "$@" ;;
   besar) jalankan_besar ;;
   semua) latih_yolo; echo; echo; jalankan_besar ;;
-  *) echo "pakai: bash jalankan_di_mac.sh [yolo|besar|semua]"; exit 1 ;;
+  ""|-h|--help|*)
+     echo "pakai: bash jalankan_di_mac.sh <mode>"
+     echo
+     echo "  yolo    latih detektor kepala di Zakynthos      ~15 menit"
+     echo "  lintas  uji detektor itu di ReunionTurtles      ~10 menit"
+     echo "          (bisa juga: bash jalankan_di_mac.sh lintas seaturtleheads)"
+     echo "  besar   SeaTurtleIDHeads dengan model L         ~75 menit"
+     echo "  semua   yolo + besar"
+     echo
+     echo "Urutan yang disarankan: yolo -> lintas -> besar"
+     [ -z "$MODE" ] && exit 0 || exit 1 ;;
 esac
 
 echo

@@ -326,6 +326,22 @@ def ukur_deteksi(ambang=0.25):
     kat = P.baca_katalog()
     _, qry = P.bangun_split(kat)
 
+    ada_gt = sum(1 for r in qry if P.kotak_kepala_gt(r["path"]) is not None)
+    if not ada_gt:
+        # Dataset ini tidak punya kotak anotasi, jadi IoU tidak bisa dihitung.
+        # Yang MASIH bisa diukur: berapa foto yang kepalanya ketemu sama
+        # sekali. Itu sudah cukup untuk menilai apakah detektornya transfer.
+        ketemu = sum(1 for r in qry
+                     if kotak_kepala(model, cv2.imread(r["path"]), ambang)[0])
+        n = len(qry)
+        print(f"n = {n} foto query")
+        print(f"  recall deteksi   : {100 * ketemu / n:.2f}%  "
+              f"({n - ketemu} tidak terdeteksi)")
+        print(f"\n  {P.DATASET} tidak punya bbox anotasi, jadi IoU TIDAK bisa")
+        print(f"  dihitung. Yang bisa dinilai cuma recall, dan dampaknya ke")
+        print(f"  re-ID lewat langkah --potong.")
+        return
+
     ious, ketemu = [], 0
     for r in qry:
         gt = P.kotak_kepala_gt(r["path"])
