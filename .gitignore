@@ -1,34 +1,51 @@
-# --- Python ---
-.venv/
-__pycache__/
-*.pyc
+.worktrees/
 
-# --- OS / editor ---
-.DS_Store
+# Local environments and editor/session state
+.venv/
 .vscode/
 .claude/
+.superpowers/
+.streamlit/
 
-# --- Dataset (besar, unduh ulang pakai unduh_dataset_penyu.py) ---
+# Python and macOS caches
+**/__pycache__/
+*.py[cod]
+.DS_Store
+**/.DS_Store
+
+# Local datasets and downloads
 dataset_penyu/
 seed_poc/
 individual_cards_2/
 Templatekartu_hd/
 models_wajah/
+*.kaggle-partial
+*.zip
 
-# --- Bobot model & hasil latih (regenerasi pakai latih_arcface.py) ---
+# Model weights and generated training artifacts
 *.pt
 *.pth
 *.h5
 *.onnx
 !Card_Recognizer-master/weights/*.h5
+turtle_reid_data/
+eksperimen/bobot_matcher/
+eksperimen/hasil/
+eksperimen/yolo_kepala/
+eksperimen/yolo_lintas_domain/
+eksperimen/yolo_reunion/
+eksperimen/yolo11n.pt
 
-# --- Database enrollment & kalibrasi ---
+# Enrollment databases and calibration
 penyu_terdaftar.npz
 muka_terdaftar.npz
 *.npz
 
-# --- Log & output sementara ---
+# Logs and temporary output
 *.log
 tahap_*.png
 debug_*.png
 hasil_*.png
+
+# Archived legacy projects and generated artifacts
+tidak_penting/
