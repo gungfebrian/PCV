@@ -1,8 +1,8 @@
 task: detect
 mode: train
 model: yolo11n.pt
-data: /Users/gung/Documents/CodingProject/PCV/eksperimen/yolo_kepala/kepala.yaml
-epochs: 60
+data: /Users/gung/Documents/CodingProject/PCV/.worktrees/turtle-reid-prototype/eksperimen/yolo_kepala/kepala.yaml
+epochs: 80
 time: null
 patience: 100
 batch: 16
@@ -12,7 +12,7 @@ save_period: -1
 cache: false
 device: ''
 workers: 8
-project: /Users/gung/Documents/CodingProject/PCV/eksperimen/yolo_kepala
+project: /Users/gung/Documents/CodingProject/PCV/.worktrees/turtle-reid-prototype/eksperimen/yolo_kepala
 name: latih
 exist_ok: true
 pretrained: true
