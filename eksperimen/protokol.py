@@ -56,8 +56,9 @@ _KANDIDAT_HF = [
 # Varian MegaDescriptor. T-224 cepat; L-384 jauh lebih akurat tapi ~20x lebih
 # berat di CPU. Keduanya sudah ada di cache HF lokal.
 MODEL = os.environ.get("MODEL", "T")
-REPO_HF = {"T": "models--BVRA--MegaDescriptor-T-224",
-           "L": "models--BVRA--MegaDescriptor-L-384"}[MODEL]
+NAMA_HF = {"T": "BVRA/MegaDescriptor-T-224",
+           "L": "BVRA/MegaDescriptor-L-384"}[MODEL]
+REPO_HF = "models--" + NAMA_HF.replace("/", "--")
 
 
 def cari_snapshot(repo=None):
@@ -478,6 +479,26 @@ def dir_hasil(dataset=None, model=None, transform=None):
     return os.path.join(AKAR_HASIL, "_".join((dataset or DATASET,
                                               model or MODEL,
                                               transform or TRANSFORM)))
+
+
+def metadata_run(katalog=None):
+    """Provenance minimum yang wajib ada di header tiap run.
+
+    Semua nilainya DITURUNKAN dari variabel run, tidak ada yang diketik
+    tangan. Versi lama menulis nama dataset sebagai literal di jalankan.py,
+    dan akibatnya setiap header.json — reunion, zakynthos, amvrakikos —
+    berlabel "SeaTurtleIDHeads". Hash-nya tetap benar, jadi angka
+    eksperimennya tidak terpengaruh, tapi labelnya menyesatkan.
+    """
+    kat = baca_katalog() if katalog is None else katalog
+    return {"dataset": DATASET,
+            "dataset_dir": os.path.basename(DATA),
+            "dataset_hash": hash_dataset(kat),
+            "model": NAMA_HF,
+            "transform": TRANSFORM,
+            "input_size": UKURAN,
+            "crop_pct": CROP_PCT,
+            "numpy": np.__version__}
 
 
 def transform_squash(rgb):

@@ -117,8 +117,8 @@ def lapor():
                         h["rank1"][sp == "Hawksbill"].astype(bool)),
                 })
 
-    hasil = {"k": K, "n": len(qry), "model": P.MODEL, "dataset": P.DATASET,
-             "dataset_hash": P.hash_dataset(kat),
+    hasil = {**P.metadata_run(kat),
+             "k": K, "n": len(qry),
              "dibuat": time.strftime("%Y-%m-%d %H:%M"),
              "baris": baris, "belum_ada_bobot": lewat}
     with open(OUT, "w") as f:

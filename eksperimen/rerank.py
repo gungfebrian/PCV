@@ -752,10 +752,9 @@ def lapor(nama_matcher, k):
 
     with open(os.path.join(HASIL,
                            f"rerank_{nama_matcher}{_tag_s1()}_k{k}.json"), "w") as f:
-        json.dump({"matcher": nama_matcher, "k": k,
-                   "cv2": cv2.__version__, "model": P.MODEL,
-                   "dataset": P.DATASET,
-                   "dataset_hash": P.hash_dataset(P.baca_katalog()),
+        json.dump({**P.metadata_run(),
+                   "matcher": nama_matcher, "k": k,
+                   "cv2": cv2.__version__,
                    "tabel": tabel}, f, indent=2)
 
     print(f"\n{nama_matcher}  k={k}  n={tabel['stage1']['n']}")

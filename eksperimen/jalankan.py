@@ -33,15 +33,10 @@ def tulis_header(kat, gal, qry, cfg):
     import timm
     import torch
     meta = {
-        "dataset": "SeaTurtleIDHeads",
-        "dataset_hash": P.hash_dataset(kat),
-        "model": {"T": "BVRA/MegaDescriptor-T-224",
-                  "L": "BVRA/MegaDescriptor-L-384"}[P.MODEL],
+        **P.metadata_run(kat),
         "model_arch": cfg["architecture"],
         "model_snapshot": os.path.basename(P.SNAP_T or ""),
-        "input_size": P.UKURAN, "crop_pct": P.CROP_PCT,
         "torch": torch.__version__, "timm": timm.__version__,
-        "numpy": np.__version__,
         "sanity": P.periksa_split(gal, qry),
     }
     with open(os.path.join(HASIL, "header.json"), "w") as f:
