@@ -17,7 +17,7 @@ import numpy as np
 import protokol as P
 from evaluasi import muat
 
-HASIL = os.path.join(P.BASE, "hasil", f"{P.DATASET}_{P.MODEL}_{P.TRANSFORM}")
+HASIL = P.dir_hasil()
 
 
 def kumpulkan(kondisi="raw", n_per_jenis=2):

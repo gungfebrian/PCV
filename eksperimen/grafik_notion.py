@@ -16,7 +16,7 @@ import os
 
 import protokol as P
 
-HASIL = os.path.join(P.BASE, "hasil", f"{P.DATASET}_{P.MODEL}_{P.TRANSFORM}")
+HASIL = P.dir_hasil()
 KELUAR = os.path.join(P.BASE, "grafik")
 os.makedirs(KELUAR, exist_ok=True)
 

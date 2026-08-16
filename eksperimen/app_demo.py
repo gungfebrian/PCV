@@ -18,7 +18,7 @@ import streamlit as st
 
 import protokol as P
 
-AKAR = os.path.join(P.BASE, "hasil")
+AKAR = P.AKAR_HASIL
 
 st.set_page_config(page_title="Preprocessing Re-ID Penyu", layout="wide")
 

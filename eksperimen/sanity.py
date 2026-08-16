@@ -15,7 +15,7 @@ import numpy as np
 import protokol as P
 from evaluasi import muat
 
-HASIL = os.path.join(P.BASE, "hasil")
+HASIL = P.AKAR_HASIL
 
 
 def _ev(Eq, Eg, id_q, id_g, s_q, s_g):

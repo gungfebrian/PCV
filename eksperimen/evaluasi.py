@@ -13,7 +13,7 @@ import numpy as np
 
 import protokol as P
 
-HASIL = os.path.join(P.BASE, "hasil", f"{P.DATASET}_{P.MODEL}_{P.TRANSFORM}")
+HASIL = P.dir_hasil()
 
 
 def muat(nama, gal, qry):

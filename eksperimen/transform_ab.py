@@ -23,7 +23,7 @@ import numpy as np
 
 import protokol as P
 
-HASIL = os.path.join(P.BASE, "hasil")
+HASIL = P.AKAR_HASIL
 OUT = os.path.join(HASIL, "emb_raw_squash.npy")
 PROG = OUT + ".progress"
 

@@ -55,7 +55,7 @@ import protokol as P
 from evaluasi import breakdown, muat
 from statistik import bootstrap_delta, mcnemar
 
-HASIL = os.path.join(P.BASE, "hasil", f"{P.DATASET}_{P.MODEL}_{P.TRANSFORM}")
+HASIL = P.dir_hasil()
 
 
 def _norm(X):

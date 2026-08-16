@@ -18,7 +18,7 @@ import os
 
 import protokol as P
 
-HASIL = os.path.join(P.BASE, "hasil", f"{P.DATASET}_{P.MODEL}_{P.TRANSFORM}")
+HASIL = P.dir_hasil()
 KELUAR = os.path.join(P.BASE, "grafik")
 
 # palet — kontras tinggi, aman untuk proyektor dan untuk buta warna merah-hijau
@@ -555,7 +555,7 @@ def chart_dosis_kepala():
     mengisi porsi yang makin kecil. Kalau akurasinya turun mulus, yang
     menentukan memang PORSI KEPALA — bukan sesuatu yang khas satu dataset.
     """
-    H_ = os.path.join(P.BASE, "hasil", "zakynthos_L_squash")
+    H_ = P.dir_hasil(dataset="zakynthos", model="L", transform="squash")
 
     def r1(nm):
         p = os.path.join(H_, f"rerank_{nm}_k40.json")

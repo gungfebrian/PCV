@@ -16,7 +16,7 @@ import numpy as np
 import protokol as P
 from evaluasi import breakdown, evaluasi
 
-HASIL = os.path.join(P.BASE, "hasil", f"{P.DATASET}_{P.MODEL}_{P.TRANSFORM}")
+HASIL = P.dir_hasil()
 BASELINE = "raw"
 B_BOOT = 10000
 SEED_BOOT = 0      # hanya untuk resampling bootstrap, BUKAN untuk split data

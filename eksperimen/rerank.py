@@ -43,7 +43,7 @@ import numpy as np
 import protokol as P
 from evaluasi import breakdown, muat
 
-HASIL = os.path.join(P.BASE, "hasil", f"{P.DATASET}_{P.MODEL}_{P.TRANSFORM}")
+HASIL = P.dir_hasil()
 SISI_PROSES = 800          # sisi terpanjang gambar saat matching
 RATIO_LOWE = 0.8
 AMBANG_RANSAC = 4.0

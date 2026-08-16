@@ -16,7 +16,6 @@ dari ~20 poin dan kamu tidak bisa menjelaskan mekanismenya dalam satu kalimat,
 periksa dulu. Sudah dua kali angka bagus ternyata bug.
 """
 
-import os
 import sys
 from collections import Counter, defaultdict
 
@@ -25,7 +24,7 @@ import numpy as np
 import protokol as P
 from evaluasi import muat
 
-HASIL = os.path.join(P.BASE, "hasil", f"{P.DATASET}_{P.MODEL}_{P.TRANSFORM}")
+HASIL = P.dir_hasil()
 
 LULUS, GAGAL, PERIKSA = "LULUS", "GAGAL", "PERIKSA"
 _hasil = []

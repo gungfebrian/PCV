@@ -36,6 +36,7 @@ import numpy as np
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(BASE)
+AKAR_HASIL = os.path.join(BASE, "hasil")
 DATASET = os.environ.get("DATASET", "reunion")
 DATA = os.path.join(REPO, "dataset_penyu",
                     {"reunion": "ReunionTurtles",
@@ -465,6 +466,18 @@ LABEL_PENDEK = {
 # Jadi "sesuai config model" ternyata BUKAN "benar untuk data ini". Ini diuji,
 # bukan diasumsikan — dan inilah kenapa baseline sempat di bawah 50%.
 TRANSFORM = os.environ.get("TRANSFORM", "squash")   # "squash" | "cfg"
+
+
+def dir_hasil(dataset=None, model=None, transform=None):
+    """Folder hasil untuk satu kombinasi (dataset, model, transform).
+
+    Tanpa argumen, mengembalikan folder run yang sedang aktif. Argumennya
+    dipakai kalau perlu menunjuk run lain — mis. membandingkan MODEL T vs L
+    atau membaca hasil dataset pembanding.
+    """
+    return os.path.join(AKAR_HASIL, "_".join((dataset or DATASET,
+                                              model or MODEL,
+                                              transform or TRANSFORM)))
 
 
 def transform_squash(rgb):

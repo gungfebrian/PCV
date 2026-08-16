@@ -27,7 +27,7 @@ import protokol as P
 from evaluasi import breakdown, evaluasi, muat
 from statistik import bootstrap_delta, mcnemar
 
-HASIL = os.path.join(P.BASE, "hasil", f"{P.DATASET}_{P.MODEL}_{P.TRANSFORM}")
+HASIL = P.dir_hasil()
 
 
 def _matriks(Eq, Eg, s_q, s_g):
@@ -124,8 +124,7 @@ def fusi(nama="raw"):
     berbeda, jadi kesalahannya tidak sepenuhnya sama."""
     keluar = []
     for m in ("T", "L"):
-        d = os.path.join(P.BASE, "hasil", f"{P.DATASET}_{m}_{P.TRANSFORM}",
-                         f"emb_{nama}.npy")
+        d = os.path.join(P.dir_hasil(model=m), f"emb_{nama}.npy")
         if not os.path.exists(d):
             return None
         E = np.load(d)
