@@ -53,8 +53,10 @@ def jalankan_kondisi(nama, gal, qry, model, budget=None):
     E = np.load(out) if os.path.exists(out) else np.zeros((len(paths), P.DIM), np.float32)
     t0 = time.time()
     # L-384 ~15x lebih lambat dari T-224 di CPU; shard harus lebih kecil supaya
-    # progres tetap tersimpan sebelum batas waktu perintah tercapai.
-    STEP = 16 if P.MODEL == "L" else 64
+    # progres tetap tersimpan sebelum batas waktu perintah tercapai. MiewID
+    # (EfficientNetV2 440x440) juga jauh lebih berat dari T-224, jadi hanya T
+    # yang boleh pakai shard besar.
+    STEP = 64 if P.MODEL == "T" else 16
     while done < len(paths):
         blok = paths[done:done + STEP]
         E[done:done + len(blok)] = P.embed(blok, nama, model)
@@ -87,7 +89,13 @@ def main():
     tulis_header(kat, gal, qry, cfg)
 
     semua = list(P.KONDISI) + list(P.KONDISI_BERKAS)
-    kondisi = [a for a in args if a in semua] or list(P.KONDISI)
+    # Kondisi komposit "berkas+array" tidak didaftar satu per satu — jumlahnya
+    # perkalian kartesius. Divalidasi di P.embed(), yang melempar kalau salah.
+    kondisi = [a for a in args
+               if a in semua
+               or ("+" in a
+                   and a.split("+", 1)[0] in P.KONDISI_BERKAS
+                   and a.split("+", 1)[1] in P.KONDISI)] or list(P.KONDISI)
     for k in kondisi:
         d, n = jalankan_kondisi(k, gal, qry, model, budget=budget)
         print(f"{k:9} {d}/{n}")

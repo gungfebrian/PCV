@@ -51,7 +51,7 @@ with st.sidebar:
     pilih = st.selectbox(
         "dataset / model / transform", runs,
         index=runs.index("reunion_L_squash") if "reunion_L_squash" in runs else 0,
-        help="Tiap run = kombinasi dataset, varian MegaDescriptor, dan transform "
+        help="Tiap run = kombinasi dataset, backbone, dan transform "
              "input. Protokol §3 identik di semua run.")
     ds, model, tf = pilih.split("_")
 
@@ -209,7 +209,7 @@ with tab[0]:
 # ======================================================== 2. STAGE-2 MATCHER
 with tab[1]:
     st.subheader("Stage-2: re-ranking dengan local feature matcher")
-    st.caption("Stage 1 (MegaDescriptor) mengambil top-k kandidat, stage 2 "
+    st.caption("Stage 1 (embedding global) mengambil top-k kandidat, stage 2 "
                "mencocokkan sisik satu per satu lalu mengurutkan ulang. "
                "Stage-1 selalu memakai embedding raw — yang divariasikan hanya "
                "gambar yang masuk ke matcher.")

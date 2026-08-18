@@ -7,12 +7,19 @@ Re-ID penyu realtime dari kamera. HANYA penyu — mode kartu dan wajah dibuang.
 
     # kamera IP (DroidCam / IP Webcam). URL salah ketik dibetulkan otomatis:
     ../.venv/bin/python penyu_live.py --url 10.64.53.103:4747
-    MODEL=T ../.venv/bin/python penyu_live.py --url 10.64.53.103:4747
+    MODEL=MIEWID ../.venv/bin/python penyu_live.py --url 10.64.53.103:4747
 
-Untuk kamera IP pakai `MODEL=T`. L-384 butuh ~600 ms per frame di CPU, jadi
-stream-nya akan tertinggal jauh; T-224 sekitar 15x lebih cepat. Akurasinya
-turun (25.00% -> 18.45% di ReunionTurtles), dan itu trade-off yang disengaja
-untuk penggunaan live.
+Pilihan backbone (2026-08-18)
+-----------------------------
+`MODEL=MIEWID` (MiewID-msv3) adalah default yang disarankan sekarang. Di
+ReunionTurtles ia rank-1 **84.52%** lawan **25.00%** milik MegaDescriptor-L-384
+pada himpunan query yang sama (+59.52 pp, McNemar p=5.4e-28). Lihat
+docs/temuan/2026-08-18-miewid-vs-megadescriptor.md.
+
+Trade-off kecepatan, dari yang tercepat: T-224 < MIEWID (440x440) < L-384.
+Untuk kamera IP, T-224 masih yang paling ringan tapi akurasinya jauh di bawah
+(25.00% -> 18.45% di ReunionTurtles). Kalau frame rate boleh turun, MIEWID
+yang dipakai — selisih akurasinya terlalu besar untuk diabaikan.
 
 Kenapa dipisah dari `eksperimen/`
 ---------------------------------
@@ -26,9 +33,10 @@ ada yang sadar.
 
 Pipeline yang ditampilkan penuh, bukan hanya hasil akhirnya:
 
-    DETECT    kontur terbesar -> bounding box   (heuristik, sering meleset)
+    DETECT    YOLO kepala (kepala_lintas.pt) -> kotak; kontur cuma cadangan
     ALIGN     resize ke ukuran input model
-    DESCRIBE  MegaDescriptor frozen -> embedding L2-normalized
+    DESCRIBE  backbone frozen -> embedding L2-normalized
+              (MODEL=T/L MegaDescriptor, MODEL=MIEWID MiewID-msv3)
     MATCH     cosine ke galeri, dikunci per sisi
     RE-RANK   local feature (SIFT / XFeat) -> inlier RANSAC -> urutkan top-k
 
@@ -63,6 +71,73 @@ HASIL = os.path.join(REPO, "eksperimen", "hasil",
 
 
 # ------------------------------------------------------------- DETECT
+# Detektor kepala lintas-domain. Dilatih di Zakynthos + Amvrakikos; recall
+# 93.3% overall pada uji lintas-domain (cross_domain_detection.json), lawan
+# 48.9% milik kepala.pt yang hanya dilatih di satu domain. Jangan pakai
+# kepala.pt di sini: recall-nya 13% di Amvrakikos.
+BOBOT_KEPALA = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                            "eksperimen", "yolo_kepala", "kepala_lintas.pt")
+_DETEKTOR = None
+# Ambang 0,25 (default ultralytics) TERLALU KETAT untuk foto jarak jauh.
+# Diukur di Zakynthos: 15 dari 160 foto tidak menghasilkan deteksi apa pun di
+# 0,25, padahal 12 di antaranya terdeteksi di 0,02 dan 9 berkotak bagus
+# (IoU 0,69-0,90) — detektornya melihat kepalanya, skornya saja di bawah
+# ambang. Menurunkan ke 0,05: kegagalan 15 -> 3, dan rank-1 76,25% -> 82,50%
+# (bootstrap CI [+1,25, +12,50]; McNemar p=0,0625, jadi arahnya jelas tapi
+# signifikansinya di ambang). Sisa jarak ke kotak anotasi manusia tinggal
+# 6,25 poin dan TIDAK lagi signifikan (p=0,18).
+KONF_KEPALA = 0.05
+
+
+def detektor_kepala():
+    """Muat YOLO sekali. None kalau ultralytics/bobotnya tidak ada."""
+    global _DETEKTOR
+    if _DETEKTOR is None:
+        if not os.path.exists(BOBOT_KEPALA):
+            _DETEKTOR = False
+        else:
+            try:
+                from ultralytics import YOLO
+                _DETEKTOR = YOLO(BOBOT_KEPALA)
+            except ImportError:
+                _DETEKTOR = False
+    return _DETEKTOR or None
+
+
+def deteksi_kepala(bgr, konf=KONF_KEPALA):
+    """(x, y, w, h) kepala dengan skor tertinggi, atau None."""
+    det = detektor_kepala()
+    if det is None:
+        return None
+    r = det.predict(bgr, conf=konf, verbose=False)[0]
+    if r.boxes is None or len(r.boxes) == 0:
+        return None
+    i = int(r.boxes.conf.argmax())
+    x0, y0, x1, y1 = (float(v) for v in r.boxes.xyxy[i])
+    return (int(x0), int(y0), int(x1 - x0), int(y1 - y0))
+
+
+def potong_kepala(bgr, kotak, ukuran=512, margin=0.18):
+    """Potongan RGB 512x512 dari sebuah kotak.
+
+    Geometrinya WAJIB sama persis dengan P.kepala_gt() — margin 18%, resize
+    INTER_AREA ke 512 — supaya potongan kamera dan potongan galeri hidup di
+    distribusi yang sama. Kalau berbeda, cosine-nya ambruk tanpa pesan galat.
+    """
+    if kotak is None:
+        return None
+    h, w = bgr.shape[:2]
+    x, y, bw, bh = kotak
+    mx, my = bw * margin, bh * margin
+    x0, y0 = max(0, int(x - mx)), max(0, int(y - my))
+    x1, y1 = min(w, int(x + bw + mx)), min(h, int(y + bh + my))
+    if x1 - x0 < 16 or y1 - y0 < 16:
+        return None
+    potong = cv2.resize(bgr[y0:y1, x0:x1], (ukuran, ukuran),
+                        interpolation=cv2.INTER_AREA)
+    return cv2.cvtColor(potong, cv2.COLOR_BGR2RGB)
+
+
 def deteksi_bbox(bgr):
     """Kontur terbesar. HEURISTIK, dan diketahui sering meleset.
 
@@ -72,6 +147,9 @@ def deteksi_bbox(bgr):
     kesalahannya terlihat — bukan supaya dipakai. Identifikasi tetap memakai
     frame penuh.
     """
+    kotak = deteksi_kepala(bgr)
+    if kotak is not None:
+        return kotak, None
     g = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
     g = cv2.GaussianBlur(g, (5, 5), 0)
     tepi = cv2.Canny(g, 50, 150)
@@ -187,9 +265,18 @@ class Mesin:
         if fn is None:
             return rgb, f"kondisi '{kondisi}' tidak dikenal"
         if path is None:
-            return None, (f"kondisi '{kondisi}' butuh berkas asal - "
-                          f"tidak tersedia untuk kamera langsung. "
-                          f"Pakai mode 'jelajah dataset', atau latih YOLO.")
+            # Kamera langsung: tidak ada anotasi, jadi kotaknya dari YOLO.
+            # Ini jalur "tetapkan crop" — geometrinya disamakan dengan
+            # P.kepala_gt() lewat potong_kepala().
+            bgr = cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
+            out = potong_kepala(bgr, deteksi_kepala(bgr))
+            if out is None:
+                # JANGAN jatuh ke frame penuh. Query tanpa crop dibandingkan
+                # dengan galeri yang di-crop = distribusi beda = sampah diam.
+                return None, ("kepala tidak terdeteksi - tidak ada crop. "
+                              "Frame penuh sengaja TIDAK dipakai sebagai "
+                              "pengganti (distribusi galeri berbeda).")
+            return out, None
         out = fn(path)
         if out is None:
             return None, f"tidak ada kotak kepala untuk {os.path.basename(path)}"
@@ -426,8 +513,11 @@ def opsi_terbaik():
         except Exception:
             continue
         for mode, b in d.get("tabel", {}).items():
-            if mode == "stage1":
-                continue
+            # stage1 IKUT jadi kandidat, tidak dilewati. Dulu dilewati karena
+            # diasumsikan re-ranking selalu menang — itu benar untuk
+            # MegaDescriptor (+46,4 pp) dan SALAH untuk MiewID (-34,5 pp,
+            # p=2,4e-13). Kalau stage1 dibuang dari kandidat, panel "opsi
+            # terbaik" akan merekomendasikan konfigurasi yang merusak.
             nm = d.get("matcher", "")
             kondisi = "raw"
             for kk in list(P.KONDISI) + list(P.KONDISI_BERKAS):
@@ -451,7 +541,7 @@ def opsi_terbaik():
     return max(kandidat, key=lambda x: x["rank1"]) if kandidat else None
 
 
-DATASET_ADA = ("reunion", "zakynthos", "seaturtleheads")
+DATASET_ADA = ("reunion", "zakynthos", "amvrakikos", "seaturtleheads")
 
 
 def papan_skor(stage1_aktif, kondisi_aktif, k_aktif, mode_aktif):

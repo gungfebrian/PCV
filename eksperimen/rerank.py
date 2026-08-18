@@ -383,10 +383,12 @@ class VisMatch:
         memakai fungsi yang sama dengan seluruh eksperimen."""
         if self.kondisi == "raw":
             return self.model.load_image(path, resize=self.resize)
-        bgr = cv2.imread(path)
-        if bgr is None:
+        # Lewat baca_kondisi(), bukan P.KONDISI langsung: kondisi berbasis
+        # BERKAS (kepala_gt, kepala_lintas) tidak ada di P.KONDISI dan dulu
+        # melempar KeyError di sini. Satu jalur untuk semua matcher.
+        rgb = baca_kondisi(path, self.kondisi)
+        if rgb is None:
             return None
-        rgb = P.KONDISI[self.kondisi](cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB))
         tmp = os.path.join(BOBOT, "_tmp_praproses.png")
         cv2.imwrite(tmp, cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR))
         return self.model.load_image(tmp, resize=self.resize)

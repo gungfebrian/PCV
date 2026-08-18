@@ -41,7 +41,8 @@ DATASET = os.environ.get("DATASET", "reunion")
 DATA = os.path.join(REPO, "dataset_penyu",
                     {"reunion": "ReunionTurtles",
                      "seaturtleheads": "SeaTurtleIDHeads",
-                     "zakynthos": "Zakynthos"}[DATASET])
+                     "zakynthos": "Zakynthos",
+                     "amvrakikos": "AmvrakikosTurtles"}[DATASET])
 
 SISI = ("left", "right")          # ketat: topleft/topright/top/front/below dibuang
 
@@ -53,11 +54,25 @@ _KANDIDAT_HF = [
 ]
 
 
-# Varian MegaDescriptor. T-224 cepat; L-384 jauh lebih akurat tapi ~20x lebih
-# berat di CPU. Keduanya sudah ada di cache HF lokal.
+# Backbone global. T-224 dan L-384 adalah varian MegaDescriptor: T cepat,
+# L jauh lebih akurat tapi ~20x lebih berat di CPU. Keduanya sudah ada di
+# cache HF lokal.
+#
+# MIEWID adalah backbone KEDUA, bukan pengganti. Ditambahkan 2026-08-18 setelah
+# repo turtle-identification-be mengukur MegaDescriptor sebagai global ranker
+# yang lemah untuk same-side head photo-ID (Reunion Green MD 23% vs MiewID 94%)
+# — dan angka MD mereka cocok dengan angka kita (22.0% / 29.4%), jadi itu bukan
+# bug implementasi melainkan pilihan model. Lihat
+# docs/temuan/2026-08-18-miewid-vs-megadescriptor.md.
+#
+# Protokol §3 TIDAK dilanggar selama satu aturan dipegang: tiap kondisi
+# dibandingkan HANYA dengan baseline dari backbone yang sama. dir_hasil()
+# sudah memisahkan folder per (dataset, model, transform), jadi run MIEWID
+# tidak bisa mengontaminasi angka MegaDescriptor.
 MODEL = os.environ.get("MODEL", "T")
 NAMA_HF = {"T": "BVRA/MegaDescriptor-T-224",
-           "L": "BVRA/MegaDescriptor-L-384"}[MODEL]
+           "L": "BVRA/MegaDescriptor-L-384",
+           "MIEWID": "conservationxlabs/miewid-msv3"}[MODEL]
 REPO_HF = "models--" + NAMA_HF.replace("/", "--")
 
 
@@ -80,11 +95,33 @@ SNAP_T = None                     # diisi malas oleh muat_model()
 # Dibaca dari config.json varian yang dipakai, BUKAN diketik manual —
 # memakai angka lain akan menggeser seluruh distribusi embedding tanpa error.
 _CFG = json.load(open(os.path.join(cari_snapshot(), "config.json")))
-UKURAN = _CFG["pretrained_cfg"]["input_size"][1]
-CROP_PCT = _CFG["pretrained_cfg"]["crop_pct"]
-DIM = _CFG["num_features"]
-MEAN = np.array(_CFG["pretrained_cfg"]["mean"], np.float32)
-STD = np.array(_CFG["pretrained_cfg"]["std"], np.float32)
+if MODEL == "MIEWID":
+    # Pengecualian yang disengaja. config.json MiewID TIDAK punya
+    # `pretrained_cfg`: ia model HF custom (trust_remote_code), bukan model
+    # timm, jadi tidak ada yang bisa dibaca dari sana. Sumber angka di bawah
+    # adalah implementasi rujukan di repo turtle-identification-be:
+    #   app/core/config.py:41              -> miewid_img_size = 440
+    #   app/services/ml/miewid_embedder.py -> Resize([440, 440]) + ToTensor()
+    #                                         + Normalize(mean/std ImageNet)
+    # Resize dengan dua angka di torchvision = squash tanpa center-crop, jadi
+    # TRANSFORM="squash" milik kita memang jalur yang sama; CROP_PCT dipaksa
+    # 1.0 supaya transform_cfg tidak diam-diam memotong tepi.
+    #
+    # DIM 2152 di-hardcode di hulu (`final_in_features` di
+    # modeling_miewid.py). muat_model() memverifikasinya ke lebar output
+    # sungguhan, jadi kalau hulu berubah kita dapat error, bukan angka yang
+    # pelan-pelan salah.
+    UKURAN = 440
+    CROP_PCT = 1.0
+    DIM = 2152
+    MEAN = np.array([0.485, 0.456, 0.406], np.float32)
+    STD = np.array([0.229, 0.224, 0.225], np.float32)
+else:
+    UKURAN = _CFG["pretrained_cfg"]["input_size"][1]
+    CROP_PCT = _CFG["pretrained_cfg"]["crop_pct"]
+    DIM = _CFG["num_features"]
+    MEAN = np.array(_CFG["pretrained_cfg"]["mean"], np.float32)
+    STD = np.array(_CFG["pretrained_cfg"]["std"], np.float32)
 
 
 # --------------------------------------------------------------- dataset
@@ -178,23 +215,152 @@ def _katalog_zakynthos(data):
     return keluar
 
 
+def _katalog_amvrakikos(data):
+    """AmvrakikosTurtles — loggerhead, Teluk Amvrakikos, Yunani.
+
+    200 foto / 50 individu, rentang 4,4 tahun. Struktur mirip Zakynthos:
+    punya bbox anotasi manusia DAN orientasi, jadi plafon "crop sempurna"
+    bisa dihitung tanpa melatih apa pun.
+
+    SATU PERBEDAAN PENTING, dan ini bisa menggagalkan seluruh run:
+    tanggal TIDAK ada di annotations.csv. wildlife-datasets membacanya dari
+    **EXIF tiap berkas gambar**. Kalau foto pernah lewat alat yang membuang
+    EXIF (banyak yang begitu), tanggalnya hilang dan split berbasis tahun
+    protokol §3 tidak bisa dibangun.
+
+    Karena itu fungsi ini MELEMPAR ERROR kalau tanggal tidak terbaca, bukan
+    diam-diam memakai tahun 0 atau membuang barisnya. Split yang salah jauh
+    lebih berbahaya daripada run yang gagal — run gagal langsung kelihatan.
+
+    Orientasi diambil dari potongan ketiga nama berkas, sama seperti
+    wildlife-datasets. Nilai 'top' dibuang karena bukan profil samping.
+    """
+    p_csv = os.path.join(data, "annotations.csv")
+    if not os.path.exists(p_csv):
+        raise FileNotFoundError(
+            f"{p_csv} tidak ada. Unduh dulu:\n"
+            f"  kaggle datasets download -d wildlifedatasets/amvrakikosturtles")
+
+    keluar, tanpa_tanggal, orientasi_lain = [], [], set()
+    with open(p_csv, encoding="utf-8-sig") as f:
+        for r in csv.DictReader(f):
+            nama = r["image_name"]
+            bagian = os.path.splitext(nama)[0].split("_")
+            if len(bagian) < 3:
+                raise ValueError(
+                    f"nama berkas '{nama}' tidak sesuai pola "
+                    f"<identitas>_<?>_<orientasi>... — katalog tidak bisa "
+                    f"dibangun tanpa menebak, dan menebak di sini berarti "
+                    f"identitas atau sisi bisa salah")
+            ori = bagian[2]
+            if ori not in SISI:
+                orientasi_lain.add(ori)
+                continue
+            path = os.path.join(data, "images", nama)
+            tgl = _tanggal_exif(path)
+            if tgl is None:
+                tanpa_tanggal.append(nama)
+                continue
+            keluar.append({
+                "path": path,
+                "identity": bagian[0],
+                "position": ori,
+                "year": int(tgl[:4]),
+                "date": tgl,
+                "species": "Loggerhead",
+            })
+
+    if tanpa_tanggal:
+        raise ValueError(
+            f"{len(tanpa_tanggal)} dari {len(tanpa_tanggal) + len(keluar)} foto "
+            f"tidak punya tanggal EXIF (contoh: {tanpa_tanggal[:3]}).\n"
+            f"AmvrakikosTurtles menyimpan tanggal HANYA di EXIF, bukan di CSV. "
+            f"Tanpa tanggal, split gallery/query berbasis tahun (protokol §3) "
+            f"tidak bisa dibangun dan angkanya tidak akan berarti apa-apa.\n"
+            f"Kemungkinan sebabnya: berkas diunduh lewat alat yang membuang "
+            f"metadata, atau diekstrak ulang. Unduh ulang dari Kaggle.")
+    if orientasi_lain:
+        print(f"  amvrakikos: {len(orientasi_lain)} orientasi non-samping "
+              f"dibuang: {sorted(orientasi_lain)}")
+    return keluar
+
+
+def _tanggal_exif(path):
+    """'YYYY-MM-DD' dari EXIF DateTimeOriginal, atau None.
+
+    Dipakai hanya oleh AmvrakikosTurtles. Sengaja memakai Pillow langsung
+    dan bukan wildlife-datasets, supaya eksperimen ini tidak bergantung pada
+    pustaka itu saat runtime.
+    """
+    try:
+        from PIL import Image
+    except ImportError:
+        raise ImportError(
+            "AmvrakikosTurtles butuh Pillow untuk membaca tanggal EXIF: "
+            "../.venv/bin/pip install pillow")
+    try:
+        with Image.open(path) as im:
+            exif = im.getexif()
+            if not exif:
+                return None
+            # 36867 DateTimeOriginal, 306 DateTime
+            for tag in (36867, 306):
+                v = exif.get(tag)
+                if not v:
+                    # DateTimeOriginal sering ada di IFD Exif, bukan IFD0
+                    try:
+                        v = exif.get_ifd(0x8769).get(tag)
+                    except Exception:
+                        v = None
+                if v:
+                    return str(v)[:10].replace(":", "-")
+    except Exception:
+        return None
+    return None
+
+
 def kotak_kepala_gt(path):
     """Bounding box kepala dari anotasi manusia, bukan dari detektor.
 
-    Hanya ada untuk Zakynthos. Mengembalikan (x, y, w, h) atau None.
+    Ada untuk Zakynthos (`bbox.csv`, kolom `label_name` difilter ke 'head')
+    dan AmvrakikosTurtles (`annotations.csv`, kolom bbox langsung).
+
+    PERINGATAN untuk Amvrakikos: berkasnya tidak punya kolom `label_name`,
+    jadi tidak ada cara program memastikan kotak itu kepala dan bukan
+    seluruh badan penyu. Periksa mata dengan `--pratinjau-bbox` sekali
+    sebelum mempercayai angka apa pun yang memakainya sebagai plafon.
+
+    Mengembalikan (x, y, w, h) atau None.
     """
     global _BBOX_GT
     if _BBOX_GT is None:
-        p = os.path.join(DATA, "bbox.csv")
         _BBOX_GT = {}
-        if os.path.exists(p):
-            with open(p, encoding="utf-8-sig") as f:
+        p_zak = os.path.join(DATA, "bbox.csv")
+        p_amv = os.path.join(DATA, "annotations.csv")
+        if os.path.exists(p_zak):
+            with open(p_zak, encoding="utf-8-sig") as f:
                 for r in csv.DictReader(f):
                     if r["label_name"] != "head":
                         continue
                     _BBOX_GT[r["image_name"]] = (
                         int(r["bbox_x"]), int(r["bbox_y"]),
                         int(r["bbox_width"]), int(r["bbox_height"]))
+        elif DATASET == "amvrakikos" and os.path.exists(p_amv):
+            with open(p_amv, encoding="utf-8-sig") as f:
+                baca = csv.DictReader(f)
+                perlu = {"bbox_x", "bbox_y", "bbox_width", "bbox_height"}
+                if not perlu <= set(baca.fieldnames or []):
+                    raise ValueError(
+                        f"{p_amv} tidak punya kolom {sorted(perlu)}. "
+                        f"Yang ada: {baca.fieldnames}")
+                for r in baca:
+                    try:
+                        _BBOX_GT[r["image_name"]] = (
+                            int(float(r["bbox_x"])), int(float(r["bbox_y"])),
+                            int(float(r["bbox_width"])),
+                            int(float(r["bbox_height"])))
+                    except (TypeError, ValueError):
+                        continue        # baris tanpa kotak — sah, jadi None
     return _BBOX_GT.get(os.path.basename(path))
 
 
@@ -204,7 +370,8 @@ _BBOX_GT = None
 def baca_katalog(data=DATA):
     kat = {"reunion": _katalog_reunion,
            "seaturtleheads": _katalog_seaturtleheads,
-           "zakynthos": _katalog_zakynthos}[DATASET](data)
+           "zakynthos": _katalog_zakynthos,
+           "amvrakikos": _katalog_amvrakikos}[DATASET](data)
     hilang = [r["path"] for r in kat if not os.path.exists(r["path"])]
     if hilang:
         raise FileNotFoundError(
@@ -409,10 +576,79 @@ def berkas_kepala(path):
     return None if bgr is None else cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
 
 
+def berkas_kepala_lintas(path):
+    """Potongan dari detektor lintas-domain (mixed_best / kepala_lintas.pt).
+
+    Beda dari kepala_gt: ini kotak DETEKTOR, bukan anotasi manusia. Jadi
+    inilah yang benar-benar didapat produksi — kepala_gt cuma plafonnya.
+    """
+    global _PETA_KEPALA_LINTAS
+    if _PETA_KEPALA_LINTAS is None:
+        directory = os.path.join(
+            os.path.dirname(BASE), "dataset_penyu", f"{DATASET}_kepala_lintas"
+        )
+        mapping_path = os.path.join(directory, "peta.json")
+        if not os.path.exists(mapping_path):
+            raise SystemExit(
+                f"potongan detektor lintas-domain belum ada di {directory}\n"
+                "Jalankan latih_detektor_lintas_domain.py --crop lebih dulu"
+            )
+        # Kunci peta.json adalah path ABSOLUT saat potongan dibuat — dan
+        # potongan itu dibuat dari worktree, jadi prefiksnya
+        # .worktrees/turtle-reid-prototype/dataset_penyu/... sedangkan katalog
+        # repo utama menunjuk dataset_penyu/... langsung. Berkasnya sama, cuma
+        # jalannya beda. Dicocokkan lewat nama berkas, yang unik dalam satu
+        # dataset (kotak_kepala_gt juga sudah memakai basename).
+        _PETA_KEPALA_LINTAS = {
+            os.path.basename(key): os.path.join(directory, value["berkas"])
+            for key, value in json.load(open(mapping_path)).items()
+        }
+    crop_path = _PETA_KEPALA_LINTAS.get(os.path.basename(path))
+    if crop_path is None:
+        return None
+    bgr = cv2.imread(crop_path)
+    return None if bgr is None else cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
+
+
 _PETA_KEPALA = None
+_PETA_KEPALA_LINTAS = None
 
 # Kontrak: path -> array RGB, atau None kalau tidak tersedia untuk foto itu.
-KONDISI_BERKAS = {"kepala": berkas_kepala, "kepala_gt": kepala_gt}
+def _pembaca_potongan(tag):
+    """Pabrik pembaca potongan dari dataset_penyu/{DATASET}_{tag}/peta.json.
+
+    Dipakai kondisi kepala_cNN — potongan detektor pada ambang keyakinan NN%,
+    dibuat oleh potong_kepala.py dengan geometri yang dikunci ke kepala_gt().
+    Kuncinya nama berkas, bukan path absolut.
+    """
+    simpan = {}
+
+    def baca(path):
+        if tag not in simpan:
+            d = os.path.join(os.path.dirname(BASE), "dataset_penyu",
+                             f"{DATASET}_{tag}")
+            p = os.path.join(d, "peta.json")
+            if not os.path.exists(p):
+                raise SystemExit(
+                    f"potongan '{tag}' belum ada di {d}\n"
+                    f"Jalankan dulu:  DATASET={DATASET} python3 potong_kepala.py "
+                    f"--konf 0.{tag[-2:]}")
+            simpan[tag] = {k: os.path.join(d, v["berkas"])
+                           for k, v in json.load(open(p)).items()}
+        f = simpan[tag].get(os.path.basename(path))
+        if f is None:
+            return None
+        bgr = cv2.imread(f)
+        return None if bgr is None else cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
+
+    return baca
+
+
+KONDISI_BERKAS = {"kepala": berkas_kepala,
+                  "kepala_lintas": berkas_kepala_lintas,
+                  "kepala_gt": kepala_gt,
+                  "kepala_c25": _pembaca_potongan("kepala_c25"),
+                  "kepala_c05": _pembaca_potongan("kepala_c05")}
 
 LABEL = {
     "raw": "Raw (baseline)",
@@ -429,6 +665,9 @@ LABEL = {
     "resize640": "Resize seragam 640x640",
     "resize768": "Resize seragam 768x768",
     "kepala": "Crop kepala YOLO 512x512",
+    "kepala_lintas": "Crop kepala YOLO lintas-domain 512x512",
+    "kepala_c25": "Crop YOLO ambang 0,25",
+    "kepala_c05": "Crop YOLO ambang 0,05",
     "kepala_gt": "Crop kepala anotasi manusia 512x512",
 }
 
@@ -450,6 +689,9 @@ LABEL_PENDEK = {
     "resize640": "640 px",
     "resize768": "768 px",
     "kepala": "Kepala YOLO",
+    "kepala_lintas": "Kepala YOLO lintas",
+    "kepala_c25": "YOLO conf .25",
+    "kepala_c05": "YOLO conf .05",
     "kepala_gt": "Kepala anotasi",
 }
 
@@ -528,6 +770,79 @@ def transform_kanonik(rgb):
     return transform_squash(rgb) if TRANSFORM == "squash" else transform_cfg(rgb)
 
 
+def _muat_miewid(snap):
+    """MiewID-msv3 dari cache HF lokal, tanpa AutoModel.from_pretrained.
+
+    `AutoModel.from_pretrained(..., trust_remote_code=True)` — jalur yang
+    dipakai turtle-identification-be — GAGAL di transformers 5.x:
+
+        AttributeError: 'MiewIdNet' object has no attribute
+        'all_tied_weights_keys'
+
+    Remote code MiewID ditulis untuk transformers 4.45. Daripada menurunkan
+    versi transformers seluruh venv, kelas aslinya diimpor langsung dari
+    snapshot dan bobotnya dimuat manual — pola yang sama dengan cabang
+    MegaDescriptor di bawah. Kodenya tetap kode hulu, bukan tulisan ulang.
+
+    `strict=True` yang menjaga kebenarannya: kalau satu bobot saja tidak
+    cocok, ini melempar, bukan diam-diam memakai bobot acak.
+    """
+    import importlib.util
+    import sys
+    import types
+
+    import timm
+    import torch
+    from safetensors.torch import load_file
+
+    paket = "_miewid_snap"
+    if paket not in sys.modules:
+        pkg = types.ModuleType(paket)
+        pkg.__path__ = [snap]
+        sys.modules[paket] = pkg
+
+    def modul(nama):
+        penuh = f"{paket}.{nama}"
+        if penuh in sys.modules:
+            return sys.modules[penuh]
+        spec = importlib.util.spec_from_file_location(
+            penuh, os.path.join(snap, f"{nama}.py"))
+        m = importlib.util.module_from_spec(spec)
+        sys.modules[penuh] = m
+        spec.loader.exec_module(m)
+        return m
+
+    modul("heads")
+    konfig_mod = modul("configuration_miewid")
+
+    # __init__ hulu memaksa pretrained=True, yang menarik bobot ImageNet
+    # efficientnetv2_rw_m dari jaringan lalu langsung ditimpa safetensors.
+    # Unduhan itu sia-sia, dan protokol ini sengaja berjalan tanpa jaringan.
+    asli = timm.create_model
+    timm.create_model = lambda *a, **k: asli(*a, **{**k, "pretrained": False})
+    try:
+        model_mod = modul("modeling_miewid")
+    finally:
+        timm.create_model = asli
+
+    cfg = json.load(open(os.path.join(snap, "config.json")))
+    obj = konfig_mod.MiewIdNetConfig(
+        **{k: v for k, v in cfg.items() if k not in ("architectures", "auto_map")})
+    model = model_mod.MiewIdNet(obj)
+    model.load_state_dict(load_file(os.path.join(snap, "model.safetensors")),
+                          strict=True)
+    model.eval()
+
+    # DIM tidak bisa dibaca dari config.json, jadi dibuktikan ke model asli.
+    with torch.no_grad():
+        lebar = model(torch.zeros(2, 3, UKURAN, UKURAN)).shape[1]
+    if lebar != DIM:
+        raise RuntimeError(f"DIM MiewID berubah di hulu: {lebar} != {DIM}")
+
+    cfg["architecture"] = cfg["architectures"][0]
+    return model, cfg
+
+
 def muat_model(snap=None):
     """MegaDescriptor-T-224 dari cache HF lokal, tanpa jaringan.
 
@@ -544,6 +859,8 @@ def muat_model(snap=None):
     global SNAP_T
     snap = snap or cari_snapshot()
     SNAP_T = snap
+    if MODEL == "MIEWID":
+        return _muat_miewid(snap)
     cfg = json.load(open(os.path.join(snap, "config.json")))
     model = timm.create_model(cfg["architecture"], pretrained=False, num_classes=0)
     sd = torch.load(os.path.join(snap, "pytorch_model.bin"),
@@ -568,8 +885,25 @@ def embed(paths, kondisi, model, batch=16, threads=4):
     # Kalau kondisi berkas tidak punya entri untuk sebuah foto, di sini
     # sengaja MELEMPAR error, bukan diam-diam memakai gambar penuh — kalau
     # jatuh diam-diam, satu angka akan mencampur dua kondisi berbeda.
-    berkas = KONDISI_BERKAS.get(kondisi)
-    fn = None if berkas else KONDISI[kondisi]
+    # Kondisi KOMPOSIT "berkas+array", mis. "kepala_gt+clahe": potong kepala
+    # dulu, baru terapkan transform array di atas potongannya. Ada supaya
+    # pertanyaan "apakah preprocessing menolong SETELAH latar dibuang" bisa
+    # diukur, bukan ditebak. Urutannya sengaja crop-dulu: preprocessing yang
+    # dihitung dari seluruh frame (white balance gray-world, CLAHE) memberi
+    # hasil berbeda kalau latar masih ikut, dan latar itu justru yang mau
+    # dibuang.
+    tambahan = None
+    if "+" in kondisi:
+        dasar, sisa = kondisi.split("+", 1)
+        if dasar not in KONDISI_BERKAS or sisa not in KONDISI:
+            raise KeyError(f"kondisi komposit '{kondisi}' tidak sah: "
+                           f"'{dasar}' harus kondisi berkas dan "
+                           f"'{sisa}' harus kondisi array")
+        berkas, tambahan = KONDISI_BERKAS[dasar], KONDISI[sisa]
+        fn = None
+    else:
+        berkas = KONDISI_BERKAS.get(kondisi)
+        fn = None if berkas else KONDISI[kondisi]
     keluar = np.zeros((len(paths), DIM), np.float32)
     for i in range(0, len(paths), batch):
         xs = []
@@ -581,6 +915,8 @@ def embed(paths, kondisi, model, batch=16, threads=4):
                         f"kondisi '{kondisi}' tidak punya potongan untuk {p}. "
                         "Query yang gagal dideteksi tidak boleh diam-diam "
                         "diganti gambar penuh.")
+                if tambahan is not None:
+                    rgb = tambahan(rgb)
                 xs.append(transform_kanonik(rgb))
                 continue
             bgr = cv2.imread(p)
