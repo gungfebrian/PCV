@@ -82,7 +82,7 @@ meyakinkan (26.19 vs 23.81).
 
 | Berkas | Guna |
 |---|---|
-| `protokol.py` | Protokol §3 dikunci di sini. Split, matching, metrik, 6 kondisi, 2 dataset, 2 varian model. |
+| `protokol.py` | Protokol §3 dikunci di sini. Split, matching, metrik, kondisi, dataset, dan pilihan backbone. |
 | `jalankan.py` | Hitung embedding per kondisi. Resumable. |
 | `evaluasi.py` | Metrik + breakdown + validasi manual vs wildlife-tools (`--validasi`). |
 | `statistik.py` | McNemar + bootstrap CI. Mencetak tabel utama. |
@@ -159,26 +159,31 @@ MODEL=L python3 rerank.py --matcher sift --kondisi crop --k 84
 ## Jalankan
 
 ```bash
-../.venv/bin/pip install torch timm opencv-python numpy scipy wildlife-tools streamlit
+../.venv/bin/pip install torch timm transformers opencv-python numpy scipy wildlife-tools streamlit
 
-python3 jalankan.py --status     # cek split & progres
-MODEL=L python3 jalankan.py      # semua kondisi (resumable, panggil ulang sampai selesai)
-MODEL=L python3 evaluasi.py --validasi
-MODEL=L python3 statistik.py
-MODEL=L python3 kasus_gagal.py
-MODEL=L python3 lanjutan.py
+MODEL=MIEWID python3 jalankan.py --status  # cek split dan progres
+MODEL=MIEWID python3 jalankan.py           # semua kondisi; resumable
+MODEL=MIEWID python3 evaluasi.py --validasi
+MODEL=MIEWID python3 statistik.py
+MODEL=MIEWID python3 kasus_gagal.py
+MODEL=MIEWID python3 dua_sisi.py
 streamlit run app_demo.py
 ```
 
-Tiga variabel lingkungan mengatur run, dan hasilnya disimpan terpisah di
+Tiga variabel lingkungan mengatur run. Hasil disimpan terpisah di
 `hasil/{DATASET}_{MODEL}_{TRANSFORM}/`:
 
-- `DATASET=reunion` (default) atau `seaturtleheads`
-- `MODEL=T` (default, cepat) atau `L` (akurat, ~15× lebih lambat di CPU)
+- `DATASET=reunion` (default), `seaturtleheads`, `zakynthos`, atau `amvrakikos`
+- `MODEL=MIEWID` (direkomendasikan), `L`, atau `T` (default lama)
 - `TRANSFORM=squash` (default) atau `cfg` (sesuai `crop_pct` config model)
 
-Bobot dibaca dari cache HuggingFace lokal (`~/.cache/huggingface`), tanpa
-jaringan.
+MiewID memakai input 440×440. MegaDescriptor memakai 384×384 (`L`) atau
+224×224 (`T`). Jangan membandingkan kondisi dari folder backbone yang berbeda;
+setiap kondisi harus dibandingkan dengan baseline raw backbone-nya sendiri.
+
+Bobot dibaca dari cache HuggingFace lokal (`~/.cache/huggingface`) tanpa
+jaringan. Run akan berhenti dengan pesan jelas apabila snapshot model belum
+tersedia di cache.
 
 ## Batasan yang harus disebut saat mengutip angka ini
 
