@@ -39,6 +39,29 @@ Dengan n = 168, satu prediksi bernilai 0,60 poin. Selisih terbesar yang
 terukur (4,76 poin) setara 8 prediksi. Itu noise — persis yang diperingatkan
 di §5 spesifikasi.
 
+## Baseline MiewID yang direkomendasikan
+
+MiewID-msv3 sudah direproduksi dengan protokol PCV yang sama: galeri tahun
+pertama, query tahun terakhir, embedding L2-normalized, cosine similarity, dan
+pencarian yang dikunci per sisi.
+
+| Model · kondisi raw | Rank-1 | Rank-5 | mAP | Δ Rank-1 vs MD (95% CI) | p (McNemar) |
+|---|---:|---:|---:|---:|---:|
+| MegaDescriptor-L-384 | 25,00 | 46,43 | 37,40 | — | — |
+| **MiewID-msv3** | **84,52** | **95,24** | **89,16** | **+59,52 [+51,79, +67,26]** | **5,4 × 10⁻²⁸** |
+
+Breakdown MiewID raw wajib disertakan saat hasil dikutip:
+
+| Pecahan | Rank-1 | Rank-5 | mAP | n |
+|---|---:|---:|---:|---:|
+| Green | 95,00 | 98,00 | 96,54 | 100 |
+| Hawksbill | 69,12 | 91,18 | 78,32 | 68 |
+| Kiri | 82,14 | 92,86 | 86,76 | 84 |
+| Kanan | 86,90 | 97,62 | 91,57 | 84 |
+
+Hasil lengkap, termasuk validasi lintas-repo dan eksperimen Amvrakikos serta
+Zakynthos, ada di `docs/temuan/2026-08-18-miewid-vs-megadescriptor.md`.
+
 ## Yang justru menaikkan akurasi
 
 | Perubahan | Rank-1 | Catatan |
