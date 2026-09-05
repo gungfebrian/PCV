@@ -1,14 +1,27 @@
-# eksperimen/ — pengaruh preprocessing terhadap re-ID penyu
+# eksperimen/ — evaluasi preprocessing dan backbone re-ID penyu
 
 Eksperimen, bukan produk. Kode lama repo tidak diubah.
 
 **Baca `AUDIT.md` dulu** kalau mau tahu apa yang rusak di repo sebelum ini
 dikerjakan, dan kenapa beberapa angka tidak boleh dibandingkan langsung.
 
-## Jawabannya
+## Jawaban singkat
 
-**Tidak ada preprocessing yang menaikkan akurasi.** Kelimanya tidak bisa
-dibedakan dari raw — semua p-value di 0.26–0.59, semua CI melewati nol.
+**MiewID-msv3 adalah backbone yang direkomendasikan.** Pada ReunionTurtles,
+rank-1 naik dari 25,00% dengan MegaDescriptor-L-384 menjadi 84,52% dengan
+MiewID. Perbandingan ini memakai dataset, split berbasis tahun, dan aturan sisi
+yang sama.
+
+Preprocessing warna atau normalisasi tidak memberi kenaikan signifikan: white
+balance, CLAHE, dan grayscale tidak membantu secara konsisten. Perubahan yang
+berguna adalah **framing kepala**, terutama saat kepala hanya mengisi sebagian
+kecil foto. Karena itu, hasil MegaDescriptor tetap dipertahankan sebagai
+baseline eksperimen, tetapi bukan lagi pilihan utama aplikasi.
+
+## Baseline MegaDescriptor
+
+Tabel berikut mendokumentasikan eksperimen awal dengan MegaDescriptor-L-384.
+Angka ini tidak boleh dicampur dengan hasil MiewID tanpa menyebut backbone.
 
 | Kondisi | Rank-1 | Rank-5 | mAP | Δ Rank-1 vs raw (95% CI) | p (McNemar) |
 |---|---|---|---|---|---|
