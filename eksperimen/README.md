@@ -187,11 +187,19 @@ tersedia di cache.
 
 ## Batasan yang harus disebut saat mengutip angka ini
 
-1. **n = 168 terlalu kecil** untuk menguji preprocessing secara meyakinkan.
-   Efek harus >10 poin baru terdeteksi. Konfirmasi arah datang dari run
-   SeaTurtleIDHeads (n = 1.246), yaitu dataset lain.
-2. **"Crop kepala" belum benar-benar teruji** — yang diuji adalah center crop
-   70% yang buta. Kepala penyu tidak selalu di tengah frame. Menguji hipotesis
-   crop dengan benar butuh detektor kepala terlatih.
-3. **Rank-1 25% berarti 3 dari 4 foto salah di tebakan pertama.** Sistem ini
-   belum layak sebagai penentu identitas otomatis.
+1. **Semua evaluasi masih closed-set.** Setiap query memiliki identitas benar
+   di galeri. Angka ini belum mengukur kemampuan menolak penyu baru yang belum
+   terdaftar, false accept, atau threshold open-set.
+2. **Cosine similarity bukan persentase keyakinan.** Skor seperti 0,70 tidak
+   boleh ditampilkan sebagai “70% yakin” sebelum dikalibrasi dan divalidasi
+   dengan data open-set yang terpisah.
+3. **n = 168 terlalu kecil** untuk menguji perubahan preprocessing kecil secara
+   meyakinkan. Satu prediksi bernilai sekitar 0,60 poin; selalu laporkan delta,
+   confidence interval, dan uji berpasangan.
+4. **Efek crop bergantung pada framing.** Crop kepala membantu besar ketika
+   kepala kecil di dalam frame, tetapi tidak otomatis membantu foto yang sudah
+   close-up. Center crop 70% dan crop hasil detektor adalah perlakuan berbeda.
+5. **Belum ada validasi pada foto lapangan Indonesia.** Hasil berasal dari
+   dataset riset Reunion, Amvrakikos, Zakynthos, dan SeaTurtleIDHeads.
+6. **Manusia tetap menentukan identitas akhir.** Rank-5 MiewID yang tinggi
+   mendukung shortlist kandidat, bukan keputusan identitas otomatis.
